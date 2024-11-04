@@ -8,7 +8,7 @@ function ImageUpload({
   imageType,
   currentImageUrl = null,
   maxSize = 2048000,
-  acceptedTypes = ['image/jpeg', 'image/png', 'image/webp'],
+acceptedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'],
   allowRemove = false // Only enable for non-essential images
 }) {
   const [uploading, setUploading] = useState(false);
@@ -83,11 +83,11 @@ function ImageUpload({
                   Replace Image
                 </span>
                 <input
-                  type="file"
-                  className="hidden"
-                  accept={acceptedTypes.join(',')}
-                  onChange={handleFileSelect}
-                  disabled={uploading}
+                    type="file"
+                    className="hidden"
+                    accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                    onChange={handleFileSelect}
+                    disabled={uploading}
                 />
               </label>
               {allowRemove && (
