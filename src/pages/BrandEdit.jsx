@@ -296,7 +296,7 @@ const handleImageUpload = async (type) => {
                 type="text"
                 value={localContent?.brand_info?.logo_alt || ''}
                 onChange={(e) => handleContentChange('logo_alt', e.target.value)}
-                className="shadow-sm block w-full sm:text-sm border border-gray-300 rounded-md p-2"
+                className="shadow-sm block w-full sm:text-sm border border-gray-300 rounded-md p-2 bg-gray-100 text-gray-800"
                 placeholder="Describe the logo for SEO"
               />
             </div>
@@ -518,7 +518,7 @@ const handleImageUpload = async (type) => {
             theme="snow"
             value={localContent?.acf?.main_content || ''}
             onChange={(content) => handleContentChange('main_content', content)}
-            className="bg-white h-96" // Taller editor
+            className="bg-white text-gray-800 h-96" // Taller editor
             modules={{
                 toolbar: [
                 [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
