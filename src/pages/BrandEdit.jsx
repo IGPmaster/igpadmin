@@ -145,28 +145,27 @@ const handleImageUpload = async (type) => {
         const data = await response.json();
         console.log('Upload response:', data);
 
-       if (data.success) {
-            const imageUrl = `https://imagedelivery.net/${config.CF_ACCOUNT_HASH}/${data.result.id}/public`;
-            
-            if (type === 'logo') {
-                try {
-                await updateBrandLogo(brandId, imageUrl, localContent.brand_info.logo_alt);
-                // Update local content after successful update
-                const newContent = {
-                    ...localContent,
-                    brand_info: {
-                    ...localContent.brand_info,
-                    logo: imageUrl
-                    }
-                };
-                setLocalContent(newContent);
-                setIsDirty(false); // Already saved to all languages
-                } catch (err) {
-                console.error('Failed to update logo across languages:', err);
+        if (data.success) {
+          const imageUrl = `https://imagedelivery.net/${config.CF_ACCOUNT_HASH}/${data.result.id}/public`;
+
+          if (type === 'logo') {
+            try {
+              await updateBrandLogo(brandId, imageUrl, localContent.brand_info.logo_alt);
+              const newContent = {
+                ...localContent,
+                brand_info: {
+                  ...localContent.brand_info,
+                  logo: imageUrl
                 }
-            } else {
-            // Handle regular image upload as before
-            newContent = {
+              };
+              setLocalContent(newContent);
+              setIsDirty(false); // Already saved to all languages
+            } catch (err) {
+              console.error('Failed to update logo across languages:', err);
+            }
+          } else {
+            // Declare `newContent` before using it here
+            const newContent = {
               ...localContent,
               acf: {
                 ...localContent.acf,
@@ -189,6 +188,7 @@ const handleImageUpload = async (type) => {
     setUploading(false);
   }
 };
+
 
   const handleContentChange = (key, value) => {
     setIsDirty(true);

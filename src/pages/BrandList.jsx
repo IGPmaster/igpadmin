@@ -116,56 +116,62 @@ export function BrandList() {
         </div>
       </div>
 
-      {/* Brand Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {brands.map((brand) => (
-          <div
-            key={brand.id}
-            className="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex flex-col space-y-3 hover:border-gray-400"
-          >
-            <div>
-              {brand.brand_info?.logo ? (
-                    <div className="mb-3">
-                    <img 
-                        src={brand.brand_info.logo} 
-                        alt={brand.brand_info.logo_alt || `${brand.name} logo`}
-                        className="h-12 object-contain" 
-                    />
-                    </div>
-                ) : (
-                    <p className="text-gray-400 text-xs">No logo yet...</p>
-                )}
-              <h3 className="text-lg font-medium text-gray-900">{brand.name}</h3>
-              <div className="mt-1 flex items-center text-sm text-gray-500">
-                <span className="font-mono bg-gray-100 px-2 py-0.5 rounded">
-                  ID: {brand.whitelabel_id}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {brand.languages.map((lang) => (
-                <Link
-                  key={lang}
-                  to={`/brands/${brand.id}/${lang}`}
-                  className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                >
-                  {lang}
-                </Link>
-              ))}
-            </div>
-
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Add Language
-              </label>
-              <LanguageSelector 
-                onSelect={(lang) => handleAddLanguage(brand.id, lang)} 
-              />
-            </div>
+     {/* Brand Grid */}
+<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  {brands.map((brand) => (
+    <div
+      key={brand.id}
+      className="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex flex-col space-y-3 hover:border-gray-400"
+    >
+      {/* Row with Brand Name, ID on the left and Logo on the right */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-lg font-medium text-gray-900">{brand.name}</h3>
+          <div className="mt-1 flex items-center text-sm text-gray-500">
+            <span className="font-mono bg-gray-100 px-2 py-0.5 rounded">
+              ID: {brand.whitelabel_id}
+            </span>
           </div>
+        </div>
+        <div>
+          {brand.brand_info?.logo ? (
+            <img 
+              src={brand.brand_info.logo} 
+              alt={brand.brand_info.logo_alt || `${brand.name} logo`}
+              className="h-12 object-contain max-w-[100px]" 
+            />
+          ) : (
+            <p className="text-gray-400 text-xs">No logo yet...</p>
+          )}
+        </div>
+      </div>
+
+      {/* Languages Section */}
+      <div className="flex flex-wrap gap-2">
+        {brand.languages.map((lang) => (
+          <Link
+            key={lang}
+            to={`/brands/${brand.id}/${lang}`}
+            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+          >
+            {lang}
+          </Link>
         ))}
       </div>
+
+      {/* Language Selector Section */}
+      <div className="mt-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Add Language
+        </label>
+        <LanguageSelector 
+          onSelect={(lang) => handleAddLanguage(brand.id, lang)} 
+        />
+      </div>
+    </div>
+  ))}
+</div>
+
 
       {/* New Brand Modal */}
       {showNewBrandModal && (
