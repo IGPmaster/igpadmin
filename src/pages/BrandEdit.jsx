@@ -5,6 +5,8 @@ import { useBrandContent } from '../lib/hooks/useBrandContent';
 import { getBrandContent, saveBrandContent, updateBrandLogo } from '../lib/api';
 import { config } from '../lib/config';
 import { useState, useEffect } from 'react';
+import ImageUpload from '../components/ImageUpload';
+
 
 // New Component
 function CopyLanguageSelector({ languages, currentLang, onCopy }) {
@@ -264,185 +266,418 @@ const handleImageUpload = async (type) => {
       <div className="bg-white shadow sm:rounded-lg">
         <div className="px-4 py-5 sm:p-6 space-y-6">
 
- {/* Logo Section */}
+ 
+
+{/* Images Section */}
 <div>
   <h3 className="text-lg font-medium text-gray-900">Brand Logo</h3>
-  <div className="mt-4 max-w-md">
-    <div className="border rounded-lg p-4">
-      <label className="block text-sm font-medium text-gray-700">Logo</label>
-      <div className="mt-2 flex flex-col space-y-4">
-        {localContent?.brand_info?.logo ? (
-          <>
-            <div className="relative group">
-              <img 
-                src={localContent.brand_info.logo} 
-                alt={localContent.brand_info.logo_alt || `${content.brand_info.brand_name} logo`}
-                className="max-h-24 object-contain" 
-              />
-              <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
-                <button
-                  onClick={() => handleImageDelete('logo')}
-                  className="bg-red-600 text-white px-3 py-1 rounded-md text-sm"
-                >
-                  Remove
-                </button>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Logo Alt Text (SEO)
-              </label>
-              <input
-                type="text"
-                value={localContent?.brand_info?.logo_alt || ''}
-                onChange={(e) => handleContentChange('logo_alt', e.target.value)}
-                className="shadow-sm block w-full sm:text-sm border border-gray-300 rounded-md p-2 bg-gray-100 text-gray-800"
-                placeholder="Describe the logo for SEO"
-              />
-            </div>
-          </>
-        ) : (
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-            <p className="text-sm text-gray-500">No logo uploaded</p>
-          </div>
-        )}
-        <button
-          type="button"
-          className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-          onClick={() => handleImageUpload('logo')}
-          disabled={uploading}
-        >
-          {uploading ? 'Uploading...' : 'Upload Logo'}
-        </button>
-      </div>
-      <p className="mt-2 text-xs text-gray-500">Recommended: Square format, transparent background</p>
+  <div className="mt-4 max-w-md space-y-4">
+    <ImageUpload 
+      imageType="Brand Logo"
+      currentImageUrl={localContent.brand_info.logo}
+      onUpload={async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('metadata', JSON.stringify({
+          brand: brandId,
+          type: 'logo',
+          language: lang
+        }));
+
+        try {
+          console.log('Uploading to worker...');
+          const response = await fetch('https://casino-content-admin.tech1960.workers.dev/upload', {
+            method: 'POST',
+            body: formData
+          });
+
+          if (!response.ok) {
+            throw new Error(await response.text());
+          }
+
+          const data = await response.json();
+          console.log('Upload response:', data);
+
+          if (data.success) {
+            const imageUrl = `https://imagedelivery.net/${config.CF_ACCOUNT_HASH}/${data.result.id}/public`;
+            await updateBrandLogo(brandId, imageUrl, localContent.brand_info.logo_alt);
+            const newContent = {
+              ...localContent,
+              brand_info: {
+                ...localContent.brand_info,
+                logo: imageUrl
+              }
+            };
+            setLocalContent(newContent);
+            setIsDirty(false); // Already saved to all languages
+            return true;
+          }
+          return false;
+        } catch (err) {
+          console.error('Upload error:', err);
+          throw err;
+        }
+      }}
+    />
+    
+    {/* Logo ALT text field */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700">
+        Logo ALT Text (SEO)
+      </label>
+      <input
+        type="text"
+        value={localContent.brand_info.logo_alt || ''}
+        onChange={(e) => {
+          setLocalContent(prev => ({
+            ...prev,
+            brand_info: {
+              ...prev.brand_info,
+              logo_alt: e.target.value
+            }
+          }));
+          setIsDirty(true);
+        }}
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+        placeholder="Enter descriptive text for the logo"
+      />
     </div>
   </div>
-</div>
 
-            {/* Images Section */}
-<div>
-  <h3 className="text-lg font-medium text-gray-900">Images</h3>
+  <h3 className="text-lg font-medium text-gray-900 mt-8">Banners</h3>
   <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-    {/* Desktop Image */}
-    <div className="border rounded-lg p-4">
+    <div>
       <label className="block text-sm font-medium text-gray-700">Desktop Banner</label>
-      <div className="mt-2 flex flex-col space-y-4">
-        {localContent?.acf?.image_full ? (
-          <>
-            <div className="relative group">
-              <img 
-                src={localContent.acf.image_full} 
-                alt={localContent?.acf?.image_full_alt || 'Desktop Banner'}
-                className="w-full h-40 object-cover rounded-lg" 
-              />
-              <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
-                <button
-                  onClick={() => handleImageDelete('desktop')}
-                  className="bg-red-600 text-white px-3 py-1 rounded-md text-sm"
-                >
-                  Remove
-                </button>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Alt Text (SEO)
-              </label>
-              <input
-                type="text"
-                value={localContent?.acf?.image_full_alt || ''}
-                onChange={(e) => handleContentChange('image_full_alt', e.target.value)}
-                className="shadow-sm block w-full sm:text-sm border border-gray-300 rounded-md p-2 bg-gray-100 text-gray-800"
-                placeholder="Describe the image for SEO"
-              />
-            </div>
-          </>
-        ) : (
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-            <p className="text-sm text-gray-500">No image uploaded</p>
-          </div>
-        )}
-        <button
-          type="button"
-          className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-          onClick={() => handleImageUpload('desktop')}
-          disabled={uploading}
-        >
-          {uploading ? (
-            <>
-              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Uploading...
-            </>
-          ) : 'Upload Image'}
-        </button>
+      <div className="mt-1 space-y-2">
+        <ImageUpload 
+          imageType="Desktop Banner"
+          currentImageUrl={localContent.acf.image_full}
+          onUpload={async (file) => {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('metadata', JSON.stringify({
+              brand: brandId,
+              type: 'desktop',
+              language: lang
+            }));
+
+            try {
+              console.log('Uploading to worker...');
+              const response = await fetch('https://casino-content-admin.tech1960.workers.dev/upload', {
+                method: 'POST',
+                body: formData
+              });
+
+              if (!response.ok) {
+                throw new Error(await response.text());
+              }
+
+              const data = await response.json();
+              console.log('Upload response:', data);
+
+              if (data.success) {
+                const imageUrl = `https://imagedelivery.net/${config.CF_ACCOUNT_HASH}/${data.result.id}/public`;
+                const newContent = {
+                  ...localContent,
+                  acf: {
+                    ...localContent.acf,
+                    image_full: imageUrl
+                  }
+                };
+                setLocalContent(newContent);
+                setIsDirty(true);
+                return true;
+              }
+              return false;
+            } catch (err) {
+              console.error('Upload error:', err);
+              throw err;
+            }
+          }}
+        />
+        {/* Desktop Banner ALT text */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Desktop Banner ALT Text
+          </label>
+          <input
+            type="text"
+            value={localContent.acf.image_full_alt || ''}
+            onChange={(e) => handleContentChange('image_full_alt', e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+            placeholder="Enter descriptive text for desktop banner"
+          />
+        </div>
       </div>
-      <p className="mt-2 text-xs text-gray-500">Recommended size: 1920x400 pixels</p>
     </div>
 
-    {/* Mobile Image */}
-    <div className="border rounded-lg p-4">
+    <div>
       <label className="block text-sm font-medium text-gray-700">Mobile Banner</label>
-      <div className="mt-2 flex flex-col space-y-4">
-        {localContent?.acf?.image_small ? (
-          <>
-            <div className="relative group">
-              <img 
-                src={localContent.acf.image_small} 
-                alt={localContent?.acf?.image_small_alt || 'Mobile Banner'}
-                className="h-40 object-cover rounded-lg mx-auto" 
-              />
-              <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
-                <button
-                  onClick={() => handleImageDelete('mobile')}
-                  className="bg-red-600 text-white px-3 py-1 rounded-md text-sm"
-                >
-                  Remove
-                </button>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Alt Text (SEO)
-              </label>
-              <input
-                type="text"
-                value={localContent?.acf?.image_small_alt || ''}
-                onChange={(e) => handleContentChange('image_small_alt', e.target.value)}
-                className="shadow-sm block w-full sm:text-sm border border-gray-300 rounded-md p-2 bg-gray-100 text-gray-800"
-                placeholder="Describe the image for SEO"
-              />
-            </div>
-          </>
-        ) : (
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-            <p className="text-sm text-gray-500">No image uploaded</p>
-          </div>
-        )}
-        <button
-          type="button"
-          className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-          onClick={() => handleImageUpload('mobile')}
-          disabled={uploading}
-        >
-          {uploading ? (
-            <>
-              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Uploading...
-            </>
-          ) : 'Upload Image'}
-        </button>
+      <div className="mt-1 space-y-2">
+        <ImageUpload 
+          imageType="Mobile Banner"
+          currentImageUrl={localContent.acf.image_small}
+          onUpload={async (file) => {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('metadata', JSON.stringify({
+              brand: brandId,
+              type: 'mobile',
+              language: lang
+            }));
+
+            try {
+              console.log('Uploading to worker...');
+              const response = await fetch('https://casino-content-admin.tech1960.workers.dev/upload', {
+                method: 'POST',
+                body: formData
+              });
+
+              if (!response.ok) {
+                throw new Error(await response.text());
+              }
+
+              const data = await response.json();
+              console.log('Upload response:', data);
+
+              if (data.success) {
+                const imageUrl = `https://imagedelivery.net/${config.CF_ACCOUNT_HASH}/${data.result.id}/public`;
+                const newContent = {
+                  ...localContent,
+                  acf: {
+                    ...localContent.acf,
+                    image_small: imageUrl
+                  }
+                };
+                setLocalContent(newContent);
+                setIsDirty(true);
+                return true;
+              }
+              return false;
+            } catch (err) {
+              console.error('Upload error:', err);
+              throw err;
+            }
+          }}
+        />
+        {/* Mobile Banner ALT text */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Mobile Banner ALT Text
+          </label>
+          <input
+            type="text"
+            value={localContent.acf.image_small_alt || ''}
+            onChange={(e) => handleContentChange('image_small_alt', e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+            placeholder="Enter descriptive text for mobile banner"
+          />
+        </div>
       </div>
-      <p className="mt-2 text-xs text-gray-500">Recommended size: 768x400 pixels</p>
     </div>
   </div>
 </div>
+
+
+{/* SEO Section */}
+<div className="bg-white shadow sm:rounded-lg mt-8">
+  <div className="px-4 py-5 sm:p-6 space-y-6">
+    <h3 className="text-lg font-medium text-gray-900">SEO Settings</h3>
+    
+    <div className="space-y-6">
+      {/* Meta Title */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Meta Title
+          <span className="ml-1 text-sm text-gray-500">
+            (Recommended: 50-60 characters)
+          </span>
+        </label>
+        <input
+          type="text"
+          value={localContent.yoast_head_json?.title || ''}
+          onChange={(e) => {
+            setLocalContent(prev => ({
+              ...prev,
+              yoast_head_json: {
+                ...prev.yoast_head_json,
+                title: e.target.value
+              }
+            }));
+            setIsDirty(true);
+          }}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+          placeholder="Enter meta title"
+          maxLength={60}
+        />
+        <p className="mt-1 text-sm text-gray-500">
+          Characters: {(localContent.yoast_head_json?.title || '').length}/60
+        </p>
+      </div>
+
+      {/* Meta Description */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Meta Description
+          <span className="ml-1 text-sm text-gray-500">
+            (Recommended: 150-160 characters)
+          </span>
+        </label>
+        <textarea
+          value={localContent.yoast_head_json?.description || ''}
+          onChange={(e) => {
+            setLocalContent(prev => ({
+              ...prev,
+              yoast_head_json: {
+                ...prev.yoast_head_json,
+                description: e.target.value
+              }
+            }));
+            setIsDirty(true);
+          }}
+          rows={3}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+          placeholder="Enter meta description"
+          maxLength={160}
+        />
+        <p className="mt-1 text-sm text-gray-500">
+          Characters: {(localContent.yoast_head_json?.description || '').length}/160
+        </p>
+      </div>
+
+      {/* Open Graph Title (for social sharing) */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Social Share Title (Open Graph)
+          <span className="ml-1 text-sm text-gray-500">
+            (Optional - defaults to Meta Title if empty)
+          </span>
+        </label>
+        <input
+          type="text"
+          value={localContent.yoast_head_json?.og_title || ''}
+          onChange={(e) => {
+            setLocalContent(prev => ({
+              ...prev,
+              yoast_head_json: {
+                ...prev.yoast_head_json,
+                og_title: e.target.value
+              }
+            }));
+            setIsDirty(true);
+          }}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+          placeholder="Enter social share title"
+        />
+      </div>
+
+      {/* Open Graph Description */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Social Share Description
+          <span className="ml-1 text-sm text-gray-500">
+            (Optional - defaults to Meta Description if empty)
+          </span>
+        </label>
+        <textarea
+          value={localContent.yoast_head_json?.og_description || ''}
+          onChange={(e) => {
+            setLocalContent(prev => ({
+              ...prev,
+              yoast_head_json: {
+                ...prev.yoast_head_json,
+                og_description: e.target.value
+              }
+            }));
+            setIsDirty(true);
+          }}
+          rows={2}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+          placeholder="Enter social share description"
+        />
+      </div>
+
+      {/* Focus Keywords */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Focus Keywords
+          <span className="ml-1 text-sm text-gray-500">
+            (Comma-separated, 3-5 recommended)
+          </span>
+        </label>
+        <input
+          type="text"
+          value={localContent.yoast_head_json?.focus_keywords || ''}
+          onChange={(e) => {
+            setLocalContent(prev => ({
+              ...prev,
+              yoast_head_json: {
+                ...prev.yoast_head_json,
+                focus_keywords: e.target.value
+              }
+            }));
+            setIsDirty(true);
+          }}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+          placeholder="e.g., online casino, slots, jackpot games"
+        />
+      </div>
+
+      {/* Canonical URL */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Canonical URL
+          <span className="ml-1 text-sm text-gray-500">
+            (Optional - use for duplicate content)
+          </span>
+        </label>
+        <input
+          type="url"
+          value={localContent.yoast_head_json?.canonical || ''}
+          onChange={(e) => {
+            setLocalContent(prev => ({
+              ...prev,
+              yoast_head_json: {
+                ...prev.yoast_head_json,
+                canonical: e.target.value
+              }
+            }));
+            setIsDirty(true);
+          }}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+          placeholder="https://example.com/page"
+        />
+      </div>
+
+      {/* Schema Type */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Schema Type
+        </label>
+        <select
+          value={localContent.yoast_head_json?.schema_type || 'WebPage'}
+          onChange={(e) => {
+            setLocalContent(prev => ({
+              ...prev,
+              yoast_head_json: {
+                ...prev.yoast_head_json,
+                schema_type: e.target.value
+              }
+            }));
+            setIsDirty(true);
+          }}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+        >
+          <option value="WebPage">Web Page</option>
+          <option value="Article">Article</option>
+          <option value="Organization">Organization</option>
+          <option value="Product">Product</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 {/* Content Section */}
 <div>

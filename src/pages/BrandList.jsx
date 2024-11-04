@@ -192,7 +192,7 @@ export function BrandList() {
                         type="text"
                         value={newBrandId}
                         onChange={(e) => setNewBrandId(e.target.value)}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 bg-gray-200 text-gray-700"
                         placeholder="e.g., 123"
                       />
                     </div>
@@ -204,7 +204,7 @@ export function BrandList() {
                         type="text"
                         value={newBrandName}
                         onChange={(e) => setNewBrandName(e.target.value)}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 bg-gray-200 text-gray-700"
                         placeholder="e.g., New Casino"
                       />
                     </div>
@@ -215,7 +215,7 @@ export function BrandList() {
                       <select
                         value={newBrandLanguage}
                         onChange={(e) => setNewBrandLanguage(e.target.value)}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 bg-gray-200 text-gray-700"
                       >
                         <option value="">Select Language</option>
                         <option value="EN">English EU/IE</option>
