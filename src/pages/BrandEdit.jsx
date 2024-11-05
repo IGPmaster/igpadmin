@@ -757,17 +757,7 @@ const handleImageUpload = async (type) => {
   />
 </div>
 
-<div>
-  <label className="block text-sm font-medium text-gray-700">
-    Main Content
-  </label>
-  <textarea
-    rows={10}
-    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
-    value={localContent.acf.main_content || ''}
-    onChange={(e) => handleContentChange('main_content', e.target.value)}
-  />
-</div>
+
 
 
     {/* Terms sections with rich text */}
