@@ -51,7 +51,7 @@ export function BrandList() {
         return;
       }
 
-      // Create initial content
+   // Create initial content
       const initialContent = {
         brand_info: {
           whitelabel_id: newBrandId,
@@ -71,7 +71,19 @@ export function BrandList() {
           sig_terms: '',
           full_terms: '',
           tnc_color: '#FEFBF3',
+          // Add these new fields
+          promo_over: '',
+          promo_under: '',
+          main_content: '', // For the main page content
           geo_target_country_sel: [newBrandLanguage]
+        },
+        // Add yoast_head_json if you need SEO fields
+        yoast_head_json: {
+          title: '',
+          description: '',
+          og_title: '',
+          og_description: '',
+          focus_keywords: ''
         }
       };
 

@@ -22,7 +22,7 @@ acceptedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'],
 
     // Validation
     if (!acceptedTypes.includes(file.type)) {
-      setError('Please upload a valid image file (JPEG, PNG, or WebP)');
+      setError('Please upload a valid image file (JPEG, PNG, WebP or SVG)');
       return;
     }
 

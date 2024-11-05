@@ -7,11 +7,39 @@ import { config } from '../lib/config';
 import { useState, useEffect } from 'react';
 import ImageUpload from '../components/ImageUpload';
 
+// CopyLanguageSelector Component
+function CopyLanguageSelector({ currentLang, brandId, onCopy }) {
+  const [availableLanguages, setAvailableLanguages] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-// New Component
-function CopyLanguageSelector({ languages, currentLang, onCopy }) {
-  const availableLanguages = languages.filter(l => l !== currentLang);
-  
+  useEffect(() => {
+    async function fetchAvailableLanguages() {
+      try {
+        const response = await fetch(`https://worker-casino-brands.tech1960.workers.dev/list/${brandId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setAvailableLanguages(data.languages.filter(lang => lang !== currentLang));
+        }
+      } catch (error) {
+        console.error('Error fetching languages:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchAvailableLanguages();
+  }, [brandId, currentLang]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center space-x-2">
+        <select disabled className="block w-48 pl-3 pr-10 py-2 text-sm border-gray-300 rounded-md bg-gray-50">
+          <option>Loading languages...</option>
+        </select>
+      </div>
+    );
+  }
+
   if (availableLanguages.length === 0) return null;
 
   return (
@@ -219,18 +247,20 @@ const handleImageUpload = async (type) => {
           </p>
         </div>
         
-        <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-          <CopyLanguageSelector 
-            languages={['EN', 'JP', 'FI', 'BR', 'ES']}
-            currentLang={lang}
-            onCopy={handleCopyContent}
-          />
-          {copying && (
-            <span className="ml-2 text-sm text-gray-500">
-              Copying content...
-            </span>
-          )}
-        </div>
+       <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+  {/* Add debug info */}
+  {console.log('Rendering selector with:', { lang, brandId })}
+  <CopyLanguageSelector 
+    currentLang={lang}
+    brandId={brandId}
+    onCopy={handleCopyContent}
+  />
+  {copying && (
+    <span className="ml-2 text-sm text-gray-500">
+      Copying content...
+    </span>
+  )}
+</div>
       </div>
 
 
@@ -701,7 +731,45 @@ const handleImageUpload = async (type) => {
           </div>
         </div>
       ))}
-      
+
+    {/* Add these new fields */}
+<div>
+  <label className="block text-sm font-medium text-gray-700">
+    Promo Over Content
+  </label>
+  <textarea
+    rows={5}
+    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+    value={localContent.acf.promo_over || ''}
+    onChange={(e) => handleContentChange('promo_over', e.target.value)}
+  />
+</div>
+
+<div>
+  <label className="block text-sm font-medium text-gray-700">
+    Promo Under Content
+  </label>
+  <textarea
+    rows={5}
+    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+    value={localContent.acf.promo_under || ''}
+    onChange={(e) => handleContentChange('promo_under', e.target.value)}
+  />
+</div>
+
+<div>
+  <label className="block text-sm font-medium text-gray-700">
+    Main Content
+  </label>
+  <textarea
+    rows={10}
+    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+    value={localContent.acf.main_content || ''}
+    onChange={(e) => handleContentChange('main_content', e.target.value)}
+  />
+</div>
+
+
     {/* Terms sections with rich text */}
     <div>
       <h3 className="text-lg font-medium text-gray-900 mb-4">Terms & Conditions</h3>
