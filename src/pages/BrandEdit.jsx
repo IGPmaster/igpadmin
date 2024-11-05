@@ -732,29 +732,45 @@ const handleImageUpload = async (type) => {
         </div>
       ))}
 
-    {/* Add these new fields */}
+    {/* Promo Over/Under Content */}
 <div>
   <label className="block text-sm font-medium text-gray-700">
     Promo Over Content
   </label>
-  <textarea
-    rows={5}
-    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
-    value={localContent.acf.promo_over || ''}
-    onChange={(e) => handleContentChange('promo_over', e.target.value)}
-  />
+  <ReactQuill
+            theme="snow"
+            value={localContent?.acf?.promo_over || ''}
+            onChange={(content) => handleContentChange('promo_over', content)}
+            className="bg-white text-gray-800"
+            modules={{
+              toolbar: [
+                ['bold', 'italic', 'underline'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['link'],
+                ['clean']
+              ]
+            }}
+          />
 </div>
 
 <div>
   <label className="block text-sm font-medium text-gray-700">
     Promo Under Content
   </label>
-  <textarea
-    rows={5}
-    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
-    value={localContent.acf.promo_under || ''}
-    onChange={(e) => handleContentChange('promo_under', e.target.value)}
-  />
+  <ReactQuill
+            theme="snow"
+            value={localContent?.acf?.promo_under || ''}
+            onChange={(content) => handleContentChange('promo_under', content)}
+            className="bg-white text-gray-800"
+            modules={{
+              toolbar: [
+                ['bold', 'italic', 'underline'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['link'],
+                ['clean']
+              ]
+            }}
+          />
 </div>
 
 
