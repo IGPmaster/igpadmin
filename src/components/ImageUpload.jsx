@@ -85,7 +85,7 @@ acceptedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'],
                 <input
                     type="file"
                     className="hidden"
-                    accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                    accept="image/jpeg,image/png,image/webp, image/gif, image/svg+xml"
                     onChange={handleFileSelect}
                     disabled={uploading}
                 />

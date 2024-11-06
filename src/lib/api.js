@@ -184,3 +184,49 @@ function getBrandName(brandId) {
   };
   return brands[brandId] || `Unknown Brand (${brandId})`;
 }
+
+// In api.js
+export async function getCloudflareTrafficData(brandId) {
+  if (!brandId) {
+    console.error('No brandId provided to getCloudflareTrafficData');
+    return {
+      traffic24h: '-',
+      requests30d: '-',
+      bandwidth: '-',
+      threats: '-'
+    };
+  }
+
+  try {
+    console.log(`Fetching analytics for brand ${brandId}`);
+    
+    const response = await fetch(
+      `${WORKER_URL}/analytics?brandId=${brandId}`,
+      {
+        method: 'GET'
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Analytics error details:', data);
+      return data.data || {
+        traffic24h: '-',
+        requests30d: '-',
+        bandwidth: '-',
+        threats: '-'
+      };
+    }
+
+    return data;
+  } catch (error) {
+    console.error(`Error fetching analytics for brand ${brandId}:`, error);
+    return {
+      traffic24h: '-',
+      requests30d: '-',
+      bandwidth: '-',
+      threats: '-'
+    };
+  }
+}
