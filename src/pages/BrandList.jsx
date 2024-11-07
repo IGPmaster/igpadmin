@@ -24,7 +24,7 @@ useEffect(() => {
       const brandsWithTrafficData = await Promise.all(
         brandsData.map(async (brand) => {
           // Make sure we're passing the brand.id
-          console.log("Fetching analytics for brand:", brand.id);
+          //console.log("Fetching analytics for brand:", brand.id);
           const trafficData = await getCloudflareTrafficData(brand.id || brand.whitelabel_id);
           return {
             ...brand,
@@ -192,7 +192,7 @@ useEffect(() => {
         brand.trafficData.threats > 0 ? 'text-red-600' : 'text-green-600'
       }`}>
         {brand.trafficData.threats > 0 
-          ? `${brand.trafficData.threats} threats` 
+          ? `${brand.trafficData.threats} threats blocked` 
           : 'Secure'}
       </div>
     </div>

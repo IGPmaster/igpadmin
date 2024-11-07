@@ -198,7 +198,7 @@ export async function getCloudflareTrafficData(brandId) {
   }
 
   try {
-    console.log(`Fetching analytics for brand ${brandId}`);
+    //console.log(`Fetching analytics for brand ${brandId}`);
     
     const response = await fetch(
       `${WORKER_URL}/analytics?brandId=${brandId}`,
