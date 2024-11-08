@@ -8,8 +8,13 @@ import { useState, useEffect } from 'react';
 import ImageUpload from '../components/ImageUpload';
 import { PromotionForm } from '../components/PromotionForm';
 import { PromotionsPanel } from '../components/PromotionsPanel';
+import { PagesPanel } from '../components/PagesPanel';  // Add this
+import { PageForm } from '../components/PageForm';      // Add this
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { usePromotions } from '../lib/hooks/usePromotions'; // Import promotions hook
+import { Link } from 'react-router-dom';
+
+//const [activeTab, setActiveTab] = useState('content'); // Add if not exists
 
 // CopyLanguageSelector Component
 function CopyLanguageSelector({ currentLang, brandId, onCopy }) {
@@ -77,7 +82,8 @@ export function BrandEdit() {
   const [localContent, setLocalContent] = useState(null);
   const [showPromotionForm, setShowPromotionForm] = useState(false);
   const [editingPromotion, setEditingPromotion] = useState(null);
-  
+  const [showPageForm, setShowPageForm] = useState(false);
+  const [editingPage, setEditingPage] = useState(null);
   const { promotions, loading: promotionsLoading } = usePromotions(brandId, lang); // Load promotions
   
   //console.log('Current location:', location.pathname);
@@ -250,13 +256,15 @@ return (
   <div className="space-y-8">
     <div className="sm:flex sm:items-center sm:justify-between">
       <div>
-  <h1 className="text-xl font-semibold text-gray-900">
-    {content.brand_info.brand_name} (ID: {content.brand_info.whitelabel_id})
-  </h1>
-  <p className="mt-1 text-sm text-gray-500">
-    Editing <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-sm font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">{lang.toUpperCase()}</span> version
-  </p>
+        <h1 className="text-xl font-semibold text-gray-900">
+          {content.brand_info.brand_name} (ID: {content.brand_info.whitelabel_id})
+      </h1>
+      <p className="mt-1 text-sm text-gray-500">
+        Editing <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-sm font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">{lang.toUpperCase()}</span> version
+      </p>
 </div>
+
+
       
       <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
       
@@ -327,6 +335,16 @@ return (
       }
     >
       Promotions
+    </Tab>
+    <Tab 
+      className={({ selected }) =>
+        `px-4 py-2 text-sm font-medium leading-5 
+        ${selected 
+          ? 'text-blue-700 border-b-2 border-blue-700' 
+          : 'text-gray-500 hover:text-gray-700'}`
+      }
+    >
+      Pages
     </Tab>
   </Tab.List>
 
@@ -899,51 +917,79 @@ return (
       </div>
     </Tab.Panel>
     
- <Tab.Panel>
-  <div className="bg-white shadow sm:rounded-lg">
-    <div className="px-4 py-5 sm:p-6">
-      {/* Header with Add button */}
-      {/* <div className="sm:flex sm:items-center">
-        <div className="sm:flex-auto">
-          <h2 className="text-xl font-semibold text-gray-900">Promotions</h2>
-          <p className="mt-2 text-sm text-gray-700">
-            Manage promotional content for {localContent.brand_info.brand_name}
-          </p>
-        </div>
-        <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-          <button
-            type="button"
-            className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
-            onClick={() => {
-              console.log("Add Promotion clicked");
-              setShowPromotionForm(true);
-            }}
-          >
-            Add Promotion
-          </button>
-        </div>
-      </div> */}
+      <Tab.Panel>
+        <div className="bg-white shadow sm:rounded-lg">
+          <div className="px-4 py-5 sm:p-6">
+            {/* Header with Add button */}
+            {/* <div className="sm:flex sm:items-center">
+              <div className="sm:flex-auto">
+                <h2 className="text-xl font-semibold text-gray-900">Promotions</h2>
+                <p className="mt-2 text-sm text-gray-700">
+                  Manage promotional content for {localContent.brand_info.brand_name}
+                </p>
+              </div>
+              <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
+                  onClick={() => {
+                    console.log("Add Promotion clicked");
+                    setShowPromotionForm(true);
+                  }}
+                >
+                  Add Promotion
+                </button>
+              </div>
+            </div> */}
 
-      <PromotionsPanel 
-    brandId={brandId}
-    brandName={content.brand_info.brand_name} // Add this line
-    lang={lang}
-    setShowPromotionForm={setShowPromotionForm}
-    setEditingPromotion={setEditingPromotion}
-  />
-    </div>
-  </div>
-</Tab.Panel>
-<Tab.Panel>
-    <PromotionsPanel 
-      content={content}
-      lang={lang}
-      setShowPromotionForm={setShowPromotionForm}
-      setEditingPromotion={setEditingPromotion}
-    />
-  </Tab.Panel>
+            <PromotionsPanel 
+          brandId={brandId}
+          brandName={content.brand_info.brand_name} // Add this line
+          lang={lang}
+          setShowPromotionForm={setShowPromotionForm}
+          setEditingPromotion={setEditingPromotion}
+        />
+          </div>
+        </div>
+      </Tab.Panel>
+
+      <Tab.Panel>
+        <PagesPanel 
+          content={content}
+          lang={lang}
+          setShowPageForm={setShowPageForm}
+          setEditingPage={setEditingPage}
+        />
+      </Tab.Panel>
   </Tab.Panels>
 </Tab.Group>
+
+{/* Form Modals - keep these outside Tab.Panels */}
+{showPromotionForm && (
+  <PromotionForm
+    isOpen={showPromotionForm}
+    onClose={() => {
+      setShowPromotionForm(false);
+      setEditingPromotion(null);
+    }}
+    promotion={editingPromotion}
+    brandId={brandId}
+    lang={lang}
+  />
+)}
+
+{showPageForm && (
+  <PageForm
+    isOpen={showPageForm}
+    onClose={() => {
+      setShowPageForm(false);
+      setEditingPage(null);
+    }}
+    page={editingPage}
+    brandId={brandId}
+    lang={lang}
+  />
+)}
 
 
           {/* Save Button Section */}

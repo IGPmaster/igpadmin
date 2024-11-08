@@ -31,6 +31,17 @@ export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang
 
   const [formData, setFormData] = useState(initialState);
 
+ // Auto-generate slug from title, if title changes
+  useEffect(() => {
+    if (formData.title && !promotion) {
+      const generatedSlug = formData.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric characters with hyphens
+        .replace(/(^-|-$)/g, ''); // Remove leading or trailing hyphens
+      setFormData(prev => ({ ...prev, slug: generatedSlug }));
+    }
+  }, [formData.title]);
+
   useEffect(() => {
     if (promotion) {
       const updatedData = {
@@ -157,7 +168,7 @@ export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang
                 <input
                   type="text"
                   value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
                   placeholder="Promotion title"
                   required
@@ -170,7 +181,7 @@ export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang
                 <input
                   type="text"
                   value={formData.slug}
-                  onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
                   placeholder="Promotion slug"
                   required

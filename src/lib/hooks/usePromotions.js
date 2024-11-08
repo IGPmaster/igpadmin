@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { config } from '../config';
 
-const WORKER_URL = 'https://casino-promotions-api.tech1960.workers.dev'; // Update this to your actual worker URL
+const WORKER_URL = 'https://casino-promotions-api.tech1960.workers.dev';
 
 export function usePromotions(brandId, lang) {
   const [promotions, setPromotions] = useState([]);
@@ -13,37 +13,35 @@ export function usePromotions(brandId, lang) {
   const listPromotions = async () => {
     try {
       setLoading(true);
-      const response = await fetch(
-        `${WORKER_URL}/promotions?brandId=${brandId}&lang=${lang}`
-      );
-
+      const response = await fetch(`${WORKER_URL}/promotions?brandId=${brandId}&lang=${lang}`);
+      
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to fetch promotions');
       }
-      
+
       const data = await response.json();
       setPromotions(data);
-      return data;
     } catch (err) {
       setError(err.message);
-      return [];
     } finally {
       setLoading(false);
     }
+  };
+
+  // Refresh function for promotions list
+  const refreshPromotions = async () => {
+    await listPromotions();
   };
 
   // Add new promotion
   const addPromotion = async (promotionData) => {
     try {
       setLoading(true);
-      
-      // Handle image uploads first if needed
       const imageUrls = await uploadPromotionImages(promotionData.images);
-      
       const promoId = crypto.randomUUID();
       const key = `promo:${brandId}:${lang}:${promoId}`;
-      
+
       const promotionContent = {
         ...promotionData,
         id: promoId,
@@ -54,26 +52,18 @@ export function usePromotions(brandId, lang) {
         }
       };
 
-      const response = await fetch(
-        `${WORKER_URL}/promotions`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            key,
-            value: promotionContent
-          })
-        }
-      );
+      const response = await fetch(`${WORKER_URL}/promotions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, value: promotionContent })
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to add promotion');
       }
 
-      await listPromotions();
+      await refreshPromotions();
       return promoId;
     } catch (err) {
       setError(err.message);
@@ -87,8 +77,6 @@ export function usePromotions(brandId, lang) {
   const updatePromotion = async (promoId, updates) => {
     try {
       setLoading(true);
-      
-      // Handle image updates if needed
       if (updates.images) {
         updates.images = await uploadPromotionImages(updates.images);
       }
@@ -103,26 +91,18 @@ export function usePromotions(brandId, lang) {
         }
       };
 
-      const response = await fetch(
-        `${WORKER_URL}/promotions`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            key,
-            value: updatedContent
-          })
-        }
-      );
+      const response = await fetch(`${WORKER_URL}/promotions`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, value: updatedContent })
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to update promotion');
       }
 
-      await listPromotions();
+      await refreshPromotions();
     } catch (err) {
       setError(err.message);
       throw err;
@@ -137,23 +117,18 @@ export function usePromotions(brandId, lang) {
       setLoading(true);
       const key = `promo:${brandId}:${lang}:${promoId}`;
 
-      const response = await fetch(
-        `${WORKER_URL}/promotions`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ key })
-        }
-      );
+      const response = await fetch(`${WORKER_URL}/promotions`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key })
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to delete promotion');
       }
 
-      await listPromotions();
+      await refreshPromotions();
     } catch (err) {
       setError(err.message);
       throw err;
@@ -162,16 +137,12 @@ export function usePromotions(brandId, lang) {
     }
   };
 
-  // Upload images to Cloudflare Images (keeping existing implementation)
+  // Image upload helper function
   const uploadPromotionImages = async (images) => {
     const uploadImage = async (file, type) => {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('metadata', JSON.stringify({
-        brand: brandId,
-        type: `promotion_${type}`,
-        language: lang
-      }));
+      formData.append('metadata', JSON.stringify({ brand: brandId, type: `promotion_${type}`, language: lang }));
 
       const response = await fetch('https://casino-content-admin.tech1960.workers.dev/upload', {
         method: 'POST',
@@ -183,22 +154,12 @@ export function usePromotions(brandId, lang) {
       return `https://imagedelivery.net/${config.CF_ACCOUNT_HASH}/${data.result.id}/public`;
     };
 
-    const imageUrls = {
-      desktop: '',
-      mobile: ''
+    return {
+      desktop: images?.desktop ? await uploadImage(images.desktop, 'desktop') : '',
+      mobile: images?.mobile ? await uploadImage(images.mobile, 'mobile') : ''
     };
-
-    if (images?.desktop) {
-      imageUrls.desktop = await uploadImage(images.desktop, 'desktop');
-    }
-    if (images?.mobile) {
-      imageUrls.mobile = await uploadImage(images.mobile, 'mobile');
-    }
-
-    return imageUrls;
   };
 
-  // Fetch promotions on mount and when brand/lang changes
   useEffect(() => {
     if (brandId && lang) {
       listPromotions();
@@ -212,6 +173,6 @@ export function usePromotions(brandId, lang) {
     addPromotion,
     updatePromotion,
     deletePromotion,
-    refreshPromotions: listPromotions
+    refreshPromotions
   };
 }
