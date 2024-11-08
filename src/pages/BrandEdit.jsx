@@ -1,7 +1,6 @@
 import ReactQuill from 'react-quill';
 import { Tab } from '@headlessui/react';
 import 'react-quill/dist/quill.snow.css';
-import { useParams } from 'react-router-dom';
 import { useBrandContent } from '../lib/hooks/useBrandContent';
 import { getBrandContent, saveBrandContent, updateBrandLogo } from '../lib/api';
 import { config } from '../lib/config';
@@ -9,6 +8,8 @@ import { useState, useEffect } from 'react';
 import ImageUpload from '../components/ImageUpload';
 import { PromotionForm } from '../components/PromotionForm';
 import { PromotionsPanel } from '../components/PromotionsPanel';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { usePromotions } from '../lib/hooks/usePromotions'; // Import promotions hook
 
 // CopyLanguageSelector Component
 function CopyLanguageSelector({ currentLang, brandId, onCopy }) {
@@ -66,6 +67,8 @@ function CopyLanguageSelector({ currentLang, brandId, onCopy }) {
 // Main Component
 export function BrandEdit() {
   const { brandId, lang } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { content, loading, error, updateContent } = useBrandContent(brandId, lang);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -74,6 +77,10 @@ export function BrandEdit() {
   const [localContent, setLocalContent] = useState(null);
   const [showPromotionForm, setShowPromotionForm] = useState(false);
   const [editingPromotion, setEditingPromotion] = useState(null);
+  
+  const { promotions, loading: promotionsLoading } = usePromotions(brandId, lang); // Load promotions
+  
+  //console.log('Current location:', location.pathname);
 
   // Initialize local content when content is loaded
   useEffect(() => {
@@ -224,86 +231,81 @@ const handleImageUpload = async (type) => {
   }
 };
 
+const handleContentChange = (key, value) => {
+  setIsDirty(true);
+  setLocalContent(prev => ({
+    ...prev,
+    acf: {
+      ...prev.acf,
+      [key]: value
+    }
+  }));
+};
 
+if (loading) return <div>Loading...</div>;
+if (error) return <div>Error: {error}</div>;
+if (!content || !localContent) return <div>Loading content...</div>;
 
-
-  const handleContentChange = (key, value) => {
-    setIsDirty(true);
-    setLocalContent(prev => ({
-      ...prev,
-      acf: {
-        ...prev.acf,
-        [key]: value
-      }
-    }));
-  };
-
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
-  if (!content || !localContent) return <div>Loading content...</div>;
-
-  return (
-    <div className="space-y-8">
-      <div className="sm:flex sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">
-            {content.brand_info.brand_name} (ID: {content.brand_info.whitelabel_id})
-          </h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Editing {lang} version
-          </p>
-        </div>
-        
-       <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-  {/* Add debug info */}
-  {console.log('Rendering selector with:', { lang, brandId })}
-  <CopyLanguageSelector 
-    currentLang={lang}
-    brandId={brandId}
-    onCopy={handleCopyContent}
-  />
-  {copying && (
-    <span className="ml-2 text-sm text-gray-500">
-      Copying content...
-    </span>
-  )}
+return (
+  <div className="space-y-8">
+    <div className="sm:flex sm:items-center sm:justify-between">
+      <div>
+  <h1 className="text-xl font-semibold text-gray-900">
+    {content.brand_info.brand_name} (ID: {content.brand_info.whitelabel_id})
+  </h1>
+  <p className="mt-1 text-sm text-gray-500">
+    Editing <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-sm font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">{lang.toUpperCase()}</span> version
+  </p>
 </div>
+      
+      <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+      
+        <CopyLanguageSelector 
+          currentLang={lang}
+          brandId={brandId}
+          onCopy={handleCopyContent}
+        />
+        {copying && (
+          <span className="ml-2 text-sm text-gray-500">
+            Copying content...
+          </span>
+        )}
       </div>
+    </div>
 
-
-
-{/* Save Button Section */}
-          <div className="mt-6 flex justify-end space-x-3">
-            {isDirty && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLocalContent(content);
-                    setIsDirty(false);
-                  }}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                >
-                  Discard Changes
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
-                >
-                  {saving ? 'Saving...' : 'Save Changes'}
-                </button>
-              </>
-            )}
-          </div>
+    {/* Save Button Section */}
+    <div className="mt-6 flex justify-end space-x-3">
+      {isDirty && (
+        <>
+          <button
+            type="button"
+            onClick={() => {
+              setLocalContent(content);
+              setIsDirty(false);
+            }}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+          >
+            Discard Changes
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+          >
+            {saving ? 'Saving...' : 'Save Changes'}
+          </button>
+        </>
+      )}
+    </div>
 
 
 
       <div className="bg-white shadow sm:rounded-lg">
         <div className="px-4 py-5 sm:p-6 space-y-6">
 
- {/* Add this right after the first save button section */}
+
+
 <Tab.Group>
   <Tab.List className="flex space-x-1 border-b border-gray-200">
     <Tab 
@@ -897,11 +899,11 @@ const handleImageUpload = async (type) => {
       </div>
     </Tab.Panel>
     
-    <Tab.Panel>
+ <Tab.Panel>
   <div className="bg-white shadow sm:rounded-lg">
     <div className="px-4 py-5 sm:p-6">
       {/* Header with Add button */}
-      <div className="sm:flex sm:items-center">
+      {/* <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
           <h2 className="text-xl font-semibold text-gray-900">Promotions</h2>
           <p className="mt-2 text-sm text-gray-700">
@@ -913,109 +915,22 @@ const handleImageUpload = async (type) => {
             type="button"
             className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
             onClick={() => {
-              console.log("Add Promotion clicked");  // Debug log
+              console.log("Add Promotion clicked");
               setShowPromotionForm(true);
             }}
           >
             Add Promotion
-</button>
+          </button>
         </div>
-      </div>
+      </div> */}
 
-      {/* Promotions List */}
-      <div className="mt-8 flex flex-col">
-        <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
-          <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-            <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-              <table className="min-w-full divide-y divide-gray-300">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Title
-                    </th>
-                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Slug
-                    </th>
-                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Status
-                    </th>
-                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Modified
-                    </th>
-                    <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
-                      <span className="sr-only">Actions</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
-                  {[
-                    {
-                      id: 1,
-                      title: 'Welcome Bonus',
-                      slug: 'welcome-bonus',
-                      status: 'published',
-                      modified: '2024-11-03T10:00:00',
-                    },
-                    {
-                      id: 2,
-                      title: 'Weekly Cashback',
-                      slug: 'weekly-cashback',
-                      status: 'draft',
-                      modified: '2024-11-02T15:30:00',
-                    },
-                    {
-                      id: 3,
-                      title: 'Christmas Special',
-                      slug: 'christmas-special',
-                      status: 'scheduled',
-                      modified: '2024-11-01T09:15:00',
-                    },
-                  ].map((promotion) => (
-                    <tr key={promotion.id}>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm">
-                        <div className="font-medium text-gray-900">{promotion.title}</div>
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {promotion.slug}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm">
-                        <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
-                          promotion.status === 'published' 
-                            ? 'bg-green-100 text-green-800'
-                            : promotion.status === 'draft'
-                            ? 'bg-gray-100 text-gray-800'
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {promotion.status}
-                        </span>
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {new Date(promotion.modified).toLocaleDateString()}
-                      </td>
-                      <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                        <button
-                          type="button"
-                          className="text-blue-600 hover:text-blue-900 mr-4"
-                          onClick={() => {/* Edit handler */}}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          className="text-red-600 hover:text-red-900"
-                          onClick={() => {/* Delete handler */}}
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
+      <PromotionsPanel 
+    brandId={brandId}
+    brandName={content.brand_info.brand_name} // Add this line
+    lang={lang}
+    setShowPromotionForm={setShowPromotionForm}
+    setEditingPromotion={setEditingPromotion}
+  />
     </div>
   </div>
 </Tab.Panel>
@@ -1058,12 +973,18 @@ const handleImageUpload = async (type) => {
           </div>
         </div>
       </div>
-      <PromotionForm
-      isOpen={showPromotionForm}
-      onClose={() => setShowPromotionForm(false)}
-      brandId={brandId}
-      lang={lang}
-    />
+     <PromotionForm
+  key={`promotion-${editingPromotion?.id || 'new'}`}
+  isOpen={showPromotionForm}
+  onClose={() => {
+    setShowPromotionForm(false);
+    setEditingPromotion(null);
+  }}
+  promotion={editingPromotion}
+  brandId={brandId}
+  lang={lang}
+/>
+
     </div>
   );
 }

@@ -1,21 +1,16 @@
 // src/lib/api.js
+
 import { config } from './config';
 
 const WORKER_URL = 'https://casino-content-admin.tech1960.workers.dev';
 
 export async function getBrandContent(brandId, lang) {
   try {
-    const response = await fetch(
-      `${WORKER_URL}/kv?key=brand:${brandId}:${lang}`,
-      {
-        method: 'GET'
-      }
-    );
+    const response = await fetch(`${WORKER_URL}/kv?key=brand:${brandId}:${lang}`, {
+      method: 'GET'
+    });
     
-    if (!response.ok) {
-      throw new Error('Failed to fetch content');
-    }
-
+    if (!response.ok) throw new Error('Failed to fetch content');
     return await response.json();
   } catch (error) {
     console.error('Error fetching brand content:', error);
@@ -25,19 +20,14 @@ export async function getBrandContent(brandId, lang) {
 
 export async function saveBrandContent(brandId, lang, content) {
   try {
-    const response = await fetch(
-      `${WORKER_URL}/kv`,
-      {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          key: `brand:${brandId}:${lang}`,
-          value: content
-        })
-      }
-    );
+    const response = await fetch(`${WORKER_URL}/kv`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        key: `brand:${brandId}:${lang}`,
+        value: content
+      })
+    });
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -45,9 +35,7 @@ export async function saveBrandContent(brandId, lang, content) {
     }
 
     const result = await response.json();
-    if (!result.success) {
-      throw new Error('Save operation failed');
-    }
+    if (!result.success) throw new Error('Save operation failed');
 
     return true;
   } catch (error) {
@@ -56,18 +44,43 @@ export async function saveBrandContent(brandId, lang, content) {
   }
 }
 
-export async function getAllBrands() {
+// Add new savePromotion function for promotions data
+export async function savePromotion(brandId, lang, promotionData) {
   try {
-    const response = await fetch(
-      `${WORKER_URL}/kv/list`,
-      {
-        method: 'GET'
-      }
-    );
+    const promoId = promotionData.id || crypto.randomUUID();
+    const key = `promo:${brandId}:${lang}:${promoId}`;
+
+    const response = await fetch(`${WORKER_URL}/kv`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        key,
+        value: promotionData
+      })
+    });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch brands');
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to save promotion');
     }
+
+    const result = await response.json();
+    if (!result.success) throw new Error('Save operation failed');
+
+    return promoId;
+  } catch (error) {
+    console.error('Error saving promotion:', error);
+    throw error;
+  }
+}
+
+export async function getAllBrands() {
+  try {
+    const response = await fetch(`${WORKER_URL}/kv/list`, {
+      method: 'GET'
+    });
+
+    if (!response.ok) throw new Error('Failed to fetch brands');
 
     const data = await response.json();
     const brandsMap = new Map();
@@ -85,7 +98,7 @@ export async function getAllBrands() {
             name: getBrandName(brandId),
             whitelabel_id: brandId,
             languages: [],
-            brand_info: {} // Change this from acf to brand_info
+            brand_info: {}
           });
         }
 
@@ -97,7 +110,6 @@ export async function getAllBrands() {
       }
     });
 
-    // Second pass: fetch content for each brand's first language
     const brandsWithContent = await Promise.all(
       Array.from(brandsMap.values()).map(async (brand) => {
         if (brand.languages.length > 0) {
@@ -107,7 +119,7 @@ export async function getAllBrands() {
               ...brand,
               brand_info: {
                 ...brand.brand_info,
-                logo: firstLangContent?.brand_info?.logo || '', // Change from acf to brand_info
+                logo: firstLangContent?.brand_info?.logo || '',
                 logo_alt: firstLangContent?.brand_info?.logo_alt || ''
               }
             };
@@ -129,13 +141,9 @@ export async function getAllBrands() {
 
 export async function updateBrandLogo(brandId, logoUrl, logoAlt = '') {
   try {
-    // Get all languages for this brand
-    const response = await fetch(
-      `${WORKER_URL}/kv/list`,
-      {
-        method: 'GET'
-      }
-    );
+    const response = await fetch(`${WORKER_URL}/kv/list`, {
+      method: 'GET'
+    });
 
     if (!response.ok) throw new Error('Failed to fetch brand languages');
     
@@ -144,7 +152,6 @@ export async function updateBrandLogo(brandId, logoUrl, logoAlt = '') {
       .filter(item => item.name.startsWith(`brand:${brandId}:`))
       .map(item => item.name.split(':')[2]);
 
-    // Update each language version
     await Promise.all(brandLanguages.map(async (lang) => {
       const content = await getBrandContent(brandId, lang);
       if (content) {
@@ -185,7 +192,7 @@ function getBrandName(brandId) {
   return brands[brandId] || `Unknown Brand (${brandId})`;
 }
 
-// In api.js
+// Analytics fetch function
 export async function getCloudflareTrafficData(brandId) {
   if (!brandId) {
     console.error('No brandId provided to getCloudflareTrafficData');
@@ -198,14 +205,9 @@ export async function getCloudflareTrafficData(brandId) {
   }
 
   try {
-    //console.log(`Fetching analytics for brand ${brandId}`);
-    
-    const response = await fetch(
-      `${WORKER_URL}/analytics?brandId=${brandId}`,
-      {
-        method: 'GET'
-      }
-    );
+    const response = await fetch(`${WORKER_URL}/analytics?brandId=${brandId}`, {
+      method: 'GET'
+    });
 
     const data = await response.json();
 

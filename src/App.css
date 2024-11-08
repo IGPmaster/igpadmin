@@ -40,3 +40,31 @@
 .read-the-docs {
   color: #888;
 }
+.custom-date-input {
+  appearance: none;
+  -webkit-appearance: none;
+  /* Safari */
+  position: relative;
+  background-color: #f3f4f6;
+  /* bg-gray-100 */
+  color: #1f2937;
+  /* text-gray-800 */
+  padding-left: 2.5rem;
+  /* space for the icon */
+}
+
+.custom-date-input::before {
+  content: '\1F4C5';
+  /* Unicode for calendar icon */
+  position: absolute;
+  left: 0.75rem;
+  /* adjust spacing */
+  top: 50%;
+  transform: translateY(-50%);
+  color: #1f2937;
+  /* text-gray-800 */
+  font-size: 1.25rem;
+  /* adjust icon size */
+  pointer-events: none;
+  /* ensures icon doesn’t block clicks */
+}
