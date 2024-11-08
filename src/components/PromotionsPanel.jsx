@@ -13,7 +13,7 @@ export const PromotionsPanel = ({ brandId, lang, setShowPromotionForm, setEditin
   const [deleteInProgress, setDeleteInProgress] = useState(false);
 
   const handleEditPromotion = (promotion) => {
-    console.log('Edit clicked with data:', promotion); // Add this log
+    //console.log('Edit clicked with data:', promotion); // Add this log
     
     // Create a clean copy of the promotion
     const promotionCopy = {
@@ -26,12 +26,12 @@ export const PromotionsPanel = ({ brandId, lang, setShowPromotionForm, setEditin
       terms: promotion.terms || '',
     };
 
-    console.log('2. Setting editingPromotion with:', promotionCopy);
+    //console.log('2. Setting editingPromotion with:', promotionCopy);
     
     // Set the states in sequence
     setEditingPromotion(promotionCopy);
     setTimeout(() => {
-      console.log('3. About to show form');
+      //console.log('3. About to show form');
       setShowPromotionForm(true);
     }, 0);
   };

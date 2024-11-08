@@ -5,9 +5,6 @@ import { config } from '../lib/config';
 import ImageUpload from '../components/ImageUpload';
 
 export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang }) {
-  //console.log('PromotionForm initializing with promotion:', promotion);
-  
-  // Compute initial state
   const initialState = promotion ? {
     title: promotion.title,
     slug: promotion.slug,
@@ -33,11 +30,8 @@ export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang
   };
 
   const [formData, setFormData] = useState(initialState);
-  //console.log('Initial formData:', formData);
 
-  // Update form when promotion changes
   useEffect(() => {
-    //console.log('useEffect triggered with promotion:', promotion);
     if (promotion) {
       const updatedData = {
         title: promotion.title,
@@ -51,15 +45,58 @@ export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang
         terms: promotion.terms,
         geo_targeting: promotion.geo_targeting || [lang.toUpperCase()],
       };
-      //console.log('Updating formData to:', updatedData);
       setFormData(updatedData);
     }
-  }, [promotion?.id]); // Only update when promotion ID changes
+  }, [promotion?.id]);
 
-  // Log whenever formData changes
-  useEffect(() => {
-    //console.log('formData changed:', formData);
-  }, [formData]);
+  // Handle image upload
+  const handleImageUpload = async (file, type) => {
+    const uploadData = new FormData();
+    uploadData.append('file', file);
+    uploadData.append('metadata', JSON.stringify({
+      brand: brandId,
+      type: `promotion_${type}`,
+      language: lang,
+    }));
+
+    try {
+      const response = await fetch('https://casino-content-admin.tech1960.workers.dev/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${config.CF_IMAGES_TOKEN}`,
+        },
+        body: uploadData,
+      });
+
+      if (!response.ok) throw new Error('Failed to upload image');
+
+      const data = await response.json();
+      if (data.success) {
+        const imageUrl = `https://imagedelivery.net/${config.CF_ACCOUNT_HASH}/${data.result.id}/public`;
+
+        setFormData(prev => ({
+          ...prev,
+          images: {
+            ...prev.images,
+            [type]: imageUrl,
+          }
+        }));
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+    }
+  };
+
+  // Handle image delete
+  const handleImageDelete = (type) => {
+    setFormData(prev => ({
+      ...prev,
+      images: {
+        ...prev.images,
+        [type]: '',
+      }
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
