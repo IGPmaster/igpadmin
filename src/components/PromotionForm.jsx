@@ -212,6 +212,7 @@ export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang
                   className="h-32 mb-12 text-gray-800"
                   modules={{
                     toolbar: [
+                      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],  // Header options
                       ['bold', 'italic', 'underline'],
                       [{ 'list': 'ordered'}, { 'list': 'bullet' }],
                       ['link'],
@@ -277,6 +278,7 @@ export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang
                   className="h-32 mb-12 text-gray-800"
                   modules={{
                     toolbar: [
+                      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],  // Header options
                       ['bold', 'italic', 'underline'],
                       [{ 'list': 'ordered'}, { 'list': 'bullet' }],
                       ['link'],
