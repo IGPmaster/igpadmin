@@ -138,10 +138,10 @@ export const PagesPanel = ({ content, lang, setShowPageForm, setEditingPage }) =
                     ) : (
                       pages?.map((page) => (
                         <tr key={page.id}>
-                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                          <td className="whitespace-nowrap px-3 py-4 text-base text-blue-800">
                             <div className="flex items-center">
                               {getTemplateIcon(page.template)}
-                              <span className="ml-2 font-medium">{page.title}</span>
+                              <span className="ml-2 font-medium cursor-pointer hover:underline" onClick={() => handleEditPage(page)}>{page.title}</span>
                             </div>
                             {page.categories?.length > 0 && (
                               <div className="mt-1 flex gap-1">
@@ -175,7 +175,7 @@ export const PagesPanel = ({ content, lang, setShowPageForm, setEditingPage }) =
                           <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                             <button
                               type="button"
-                              className="text-blue-600 hover:text-blue-900 mr-4"
+                              className="text-blue-700 hover:text-blue-900 mr-4 bg-blue-50 border-blue-800 hover:bg-blue-100"
                               onClick={() => handleEditPage(page)}
                               disabled={deleteInProgress}
                             >
@@ -183,7 +183,7 @@ export const PagesPanel = ({ content, lang, setShowPageForm, setEditingPage }) =
                             </button>
                             <button
                               type="button"
-                              className="text-red-600 hover:text-red-900"
+                              className="text-red-700 bg-red-50 border-red-700 hover:text-red-900 hover:bg-red-800 hover:text-red-50"
                               onClick={() => handleDeletePage(page.id)}
                               disabled={deleteInProgress}
                             >

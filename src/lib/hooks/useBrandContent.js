@@ -1,9 +1,8 @@
-// src/lib/hooks/useBrandContent.js
-
+// useBrandContent.js
 import { useState, useEffect } from 'react';
 import { getBrandContent, saveBrandContent } from '../api';
 
-// Map of brand IDs to names - this should match your BrandList.jsx
+// Map of brand IDs to names
 const BRAND_INFO = {
   '12': 'Hippozino',
   '239': 'JazzySpins',
@@ -21,18 +20,75 @@ const BRAND_INFO = {
 };
 
 const getDefaultContent = (brandId, lang) => ({
+  // Core Metadata
+  id: crypto.randomUUID(),
+  brand_id: brandId,
+  language: lang,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+
+  // Brand Information
   brand_info: {
     whitelabel_id: brandId,
     brand_name: BRAND_INFO[brandId] || 'Unknown Brand',
-    logo: '', // Add this
-    logo_alt: '', // Add this
+    logo: {
+      url: '',
+      alt: '',
+      width: null,
+      height: null
+    }
   },
-  acf: {
-    image_full: '',
-    image_full_alt: '', // Add this
-    image_small: '',
-    image_small_alt: '', // Add this
-    trust_icons: '',
+
+  // Images with metadata
+  images: {
+    desktop: {
+      url: '',
+      alt: '',
+      width: null,
+      height: null,
+      focal_point: 'center'
+    },
+    mobile: {
+      url: '',
+      alt: '',
+      width: null,
+      height: null,
+      focal_point: 'center'
+    },
+    trust_icons: {
+      url: '',
+      alt: ''
+    }
+  },
+
+  // SEO & Meta
+  meta: {
+    title: '',
+    description: '',
+    keywords: [],
+    focus_keyword: '',
+    canonical_url: '',
+    
+    og_title: '',
+    og_description: '',
+    og_type: 'website',
+    og_image: '',
+    
+    twitter_card: 'summary_large_image',
+    twitter_title: '',
+    twitter_description: '',
+    twitter_image: '',
+    
+    structured_data: {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: BRAND_INFO[brandId] || '',
+      url: ''
+    }
+  },
+
+  // Main Content Sections
+  content: {
     new_games_info: '',
     popular_games_info: '',
     slot_games_info: '',
@@ -40,11 +96,37 @@ const getDefaultContent = (brandId, lang) => ({
     jackpot_games_info: '',
     live_games_info: '',
     scratch_games_info: '',
+    main_content: '',
+    excerpt: ''
+  },
+
+  // Terms & Compliance
+  legal: {
     sig_terms: '',
     full_terms: '',
-    main_content: '', // Add this line
     tnc_color: '#FEFBF3',
-    geo_target_country_sel: [lang]
+    compliance_notes: ''
+  },
+
+  // Enhanced targeting
+  targeting: {
+    countries: [lang.toUpperCase()],
+    excluded_countries: [],
+    geo_target_country_sel: [lang],
+    regions: [],
+    languages: [lang]
+  },
+
+  // Page Settings
+  settings: {
+    status: 'draft',
+    template: 'default',
+    priority: 0.5,
+    indexing: {
+      index: true,
+      follow: true,
+      advanced_robots: ''
+    }
   }
 });
 

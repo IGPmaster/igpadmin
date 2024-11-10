@@ -13,7 +13,6 @@ export const PromotionsPanel = ({ brandId, lang, setShowPromotionForm, setEditin
   const [deleteInProgress, setDeleteInProgress] = useState(false);
 
   const handleEditPromotion = (promotion) => {
-    //console.log('Edit clicked with data:', promotion); // Add this log
     
     // Create a clean copy of the promotion
     const promotionCopy = {
@@ -25,13 +24,10 @@ export const PromotionsPanel = ({ brandId, lang, setShowPromotionForm, setEditin
       description: promotion.description || '',
       terms: promotion.terms || '',
     };
-
-    //console.log('2. Setting editingPromotion with:', promotionCopy);
     
     // Set the states in sequence
     setEditingPromotion(promotionCopy);
     setTimeout(() => {
-      //console.log('3. About to show form');
       setShowPromotionForm(true);
     }, 0);
   };
@@ -133,8 +129,8 @@ export const PromotionsPanel = ({ brandId, lang, setShowPromotionForm, setEditin
                     ) : (
                       promotions.map((promotion) => (
                         <tr key={promotion.id}>
-                          <td className="whitespace-nowrap px-3 py-4 text-sm">
-                            <div className="font-medium text-gray-900">{promotion.title}</div>
+                          <td className="whitespace-nowrap px-3 py-4">
+                            <div className="whitespace-nowrap px-3 py-4 text-base text-blue-800 ml-2 font-medium cursor-pointer hover:underline" onClick={() => handleEditPromotion(promotion)}>{promotion.title}</div>
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                             {promotion.slug}
@@ -158,7 +154,7 @@ export const PromotionsPanel = ({ brandId, lang, setShowPromotionForm, setEditin
                           <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                             <button
                               type="button"
-                              className="text-blue-600 hover:text-blue-900 mr-4"
+                              className="text-blue-700 hover:text-blue-900 mr-4 bg-blue-50 border-blue-800 hover:bg-blue-100"
                               onClick={() => handleEditPromotion(promotion)}
                               disabled={deleteInProgress}
                             >
@@ -166,7 +162,7 @@ export const PromotionsPanel = ({ brandId, lang, setShowPromotionForm, setEditin
                             </button>
                             <button
                               type="button"
-                              className="text-red-600 hover:text-red-900"
+                              className="text-red-700 bg-red-50 border-red-700 hover:text-red-900 hover:bg-red-800 hover:text-red-50"
                               onClick={() => handleDeletePromotion(promotion.id)}
                               disabled={deleteInProgress}
                             >

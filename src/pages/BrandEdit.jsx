@@ -259,8 +259,8 @@ return (
         <h1 className="text-xl font-semibold text-gray-900">
           {content.brand_info.brand_name} (ID: {content.brand_info.whitelabel_id})
       </h1>
-      <p className="mt-1 text-sm text-gray-500">
-        Editing <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-sm font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">{lang.toUpperCase()}</span> version
+      <p className="mt-1 text-base text-gray-500">
+        Editing <span className=" items-center text-xl rounded-full bg-red-700 px-2 py-1 text-sm font-medium text-red-50 ring-1 ring-inset ring-blue-700/10">{lang.toUpperCase()}</span> version
       </p>
 </div>
 
@@ -318,7 +318,7 @@ return (
   <Tab.List className="flex space-x-1 border-b border-gray-200">
     <Tab 
       className={({ selected }) =>
-        `px-4 py-2 text-sm font-medium leading-5 
+        `px-4 py-2 text-sm bg-blue-50 font-medium leading-5 
         ${selected 
           ? 'text-blue-700 border-b-2 border-blue-700' 
           : 'text-gray-500 hover:text-gray-700'}`
@@ -328,7 +328,7 @@ return (
     </Tab>
     <Tab 
       className={({ selected }) =>
-        `px-4 py-2 text-sm font-medium leading-5 
+        `px-4 py-2 text-sm font-medium bg-blue-50 leading-5 
         ${selected 
           ? 'text-blue-700 border-b-2 border-blue-700' 
           : 'text-gray-500 hover:text-gray-700'}`
@@ -338,7 +338,7 @@ return (
     </Tab>
     <Tab 
       className={({ selected }) =>
-        `px-4 py-2 text-sm font-medium leading-5 
+        `px-4 py-2 text-sm font-medium bg-blue-50 leading-5 
         ${selected 
           ? 'text-blue-700 border-b-2 border-blue-700' 
           : 'text-gray-500 hover:text-gray-700'}`
