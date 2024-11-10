@@ -260,7 +260,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
             </h3>
 
             <form onSubmit={handleSubmit}>
-              <div className="min-h-[600px]">
+              <div className="min-h-[750px]">
                 <Tab.Group>
                   <Tab.List className="flex space-x-1 rounded-xl bg-gray-100 p-1 sticky top-0 z-10">
                     <Tab className={({ selected }) =>
