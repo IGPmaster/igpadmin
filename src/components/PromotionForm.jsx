@@ -5,29 +5,40 @@ import { config } from '../lib/config';
 import ImageUpload from '../components/ImageUpload';
 
 export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang }) {
-  const initialState = promotion ? {
-    title: promotion.title,
-    slug: promotion.slug,
-    description: promotion.description,
-    type: promotion.type,
-    status: promotion.status,
-    images: promotion.images,
-    valid_from: promotion.valid_from?.split('T')[0] || new Date().toISOString().split('T')[0],
-    valid_to: promotion.valid_to?.split('T')[0] || '',
-    terms: promotion.terms,
-    geo_targeting: promotion.geo_targeting || [lang.toUpperCase()],
-  } : {
-    title: '',
-    slug: '',
-    description: '',
-    type: 'regular',
-    status: 'draft',
-    images: { desktop: '', mobile: '' },
-    valid_from: new Date().toISOString().split('T')[0],
-    valid_to: '',
-    terms: '',
-    geo_targeting: [lang.toUpperCase()],
-  };
+  
+const initialState = promotion ? {
+  title: promotion.title || '',
+  slug: promotion.slug || '',
+  description: promotion.description || '',
+  type: promotion.type || 'regular',
+  status: promotion.status || 'draft',
+  images: {
+    desktop: promotion.images?.desktop || '',
+    mobile: promotion.images?.mobile || '',
+    alt_desktop: promotion.images?.alt_desktop || '',
+    alt_mobile: promotion.images?.alt_mobile || '',
+  },
+  valid_from: promotion.valid_from?.split('T')[0] || new Date().toISOString().split('T')[0],
+  valid_to: promotion.valid_to?.split('T')[0] || '',
+  terms: promotion.terms || '',
+  geo_targeting: promotion.geo_targeting || [lang.toUpperCase()],
+} : {
+  title: '',
+  slug: '',
+  description: '',
+  type: 'regular',
+  status: 'draft',
+  images: {
+    desktop: '',
+    mobile: '',
+    alt_desktop: '',
+    alt_mobile: '',
+  },
+  valid_from: new Date().toISOString().split('T')[0],
+  valid_to: '',
+  terms: '',
+  geo_targeting: [lang.toUpperCase()],
+};
 
   const [formData, setFormData] = useState(initialState);
 
@@ -232,6 +243,16 @@ export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang
                   onRemove={() => handleImageDelete('desktop')}
                   allowRemove={true}
                 />
+                <input
+    type="text"
+    value={formData.images.alt_desktop}
+    onChange={(e) => setFormData({
+      ...formData,
+      images: { ...formData.images, alt_desktop: e.target.value }
+    })}
+    placeholder="ALT text for desktop banner"
+    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+  />
               </div>
 
               {/* Mobile Banner */}
@@ -244,6 +265,16 @@ export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang
                   onRemove={() => handleImageDelete('mobile')}
                   allowRemove={true}
                 />
+                <input
+    type="text"
+    value={formData.images.alt_mobile}
+    onChange={(e) => setFormData({
+      ...formData,
+      images: { ...formData.images, alt_mobile: e.target.value }
+    })}
+    placeholder="ALT text for mobile banner"
+    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+  />
               </div>
 
               {/* Valid From/To */}

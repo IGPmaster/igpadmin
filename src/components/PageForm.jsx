@@ -23,54 +23,90 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
 const [newCategory, setNewCategory] = useState('');
 const [newTag, setNewTag] = useState('');
   // Compute initial state
-  const initialState = page ? {
-    title: page.title,
-    slug: page.slug,
-    template: page.template,
-    status: page.status,
-    content: page.content,
-    images: page.images,
-    categories: page.categories,
-    tags: page.tags,
-    meta: page.meta,
-    seo_settings: page.seo_settings,
-    scheduled_for: page.scheduled_for
-  } : {
+const initialState = page ? {
+  title: page.title || '',
+  slug: page.slug || '',
+  template: page.template || 'default',
+  status: page.status || 'draft',
+  content: {
+    main: page.content?.main || '',
+    excerpt: page.content?.excerpt || '',
+  },
+  images: {
+    featured: page.images?.featured || '',
+    banner: page.images?.banner || '',
+    thumbnail: page.images?.thumbnail || '',
+    alt_featured: page.images?.alt_featured || '',
+    alt_banner: page.images?.alt_banner || '',
+    alt_thumbnail: page.images?.alt_thumbnail || '',
+  },
+  categories: page.categories || [],
+  tags: page.tags || [],
+  meta: {
+    title: page.meta?.title || '',
+    description: page.meta?.description || '',
+    keywords: page.meta?.keywords || [],
+    og_title: page.meta?.og_title || '',
+    og_description: page.meta?.og_description || '',
+    og_image: page.meta?.og_image || '',
+    canonical_url: page.meta?.canonical_url || '',
+    structured_data: page.meta?.structured_data || {},
+  },
+  seo_settings: {
+    index: page.seo_settings?.index || true,
+    follow: page.seo_settings?.follow || true,
+    schema_type: page.seo_settings?.schema_type || 'WebPage',
+  },
+  scheduled_for: page.scheduled_for || null,
+} : {
+  title: '',
+  slug: '',
+  template: 'default',
+  status: 'draft',
+  content: {
+    main: '',
+    excerpt: '',
+  },
+  images: {
+    featured: '',
+    banner: '',
+    thumbnail: '',
+    alt_featured: '',
+    alt_banner: '',
+    alt_thumbnail: '',
+  },
+  categories: [],
+  tags: [],
+  meta: {
     title: '',
-    slug: '',
-    template: 'default',
-    status: 'draft',
-    content: {
-      main: '',
-      excerpt: ''
-    },
-    images: {
-      featured: '',
-      banner: '',
-      thumbnail: ''
-    },
-    categories: [],
-    tags: [],
-    meta: {
-      title: '',
-      description: '',
-      keywords: [],
-      og_title: '',
-      og_description: '',
-      og_image: '',
-      canonical_url: '',
-      structured_data: {}
-    },
-    seo_settings: {
-      index: true,
-      follow: true,
-      schema_type: 'WebPage'
-    },
-    scheduled_for: null
-  };
+    description: '',
+    keywords: [],
+    og_title: '',
+    og_description: '',
+    og_image: '',
+    canonical_url: '',
+    structured_data: {},
+  },
+  seo_settings: {
+    index: true,
+    follow: true,
+    schema_type: 'WebPage',
+  },
+  scheduled_for: null,
+};
 
   const [formData, setFormData] = useState(initialState);
-  console.log('Initial formData:', formData);
+
+  // Add this effect to auto-generate slug from title
+useEffect(() => {
+  if (formData.title && !page) {  
+    const generatedSlug = formData.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-') 
+      .replace(/(^-|-$)/g, ''); 
+    setFormData(prev => ({ ...prev, slug: generatedSlug }));
+  }
+}, [formData.title]);
 
   // Update form when page changes
   useEffect(() => {
@@ -147,35 +183,47 @@ const [newTag, setNewTag] = useState('');
     }
   };
 
-  const handleSubmit = async (e) => {
+
+const handleSubmit = async (e) => {
   e.preventDefault();
   try {
     const pageId = page?.id || crypto.randomUUID();
     const key = `page:${brandId}:${lang}:${pageId}`;
 
     const pageData = {
-      ...formData,
+      ...formData,  // Keep all form data
       id: pageId,
       brand_id: brandId,
       language: lang,
+      created_at: page?.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
 
+    console.log('=== Debug Submit ===');
+    console.log('Form Data:', formData);
+    console.log('Page Data:', pageData);
+
+    const requestBody = {
+      brandId,
+      lang,
+      key,
+      value: pageData,
+    };
+
+    console.log('Request Body:', requestBody);
+
     const response = await fetch(`https://casino-pages-api.tech1960.workers.dev/api/pages/`, {
-      method: page ? 'PUT' : 'POST',
+      method: 'POST',  // Always POST for new pages
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.CF_IMAGES_TOKEN}`,
       },
-      body: JSON.stringify({
-        brandId,
-        lang,
-        key,
-        value: pageData,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
-    if (!response.ok) throw new Error('Failed to save page');
+    const responseData = await response.json();
+    console.log('Response:', responseData);
+
+    if (!response.ok) throw new Error(`Failed to save page: ${JSON.stringify(responseData)}`);
     onClose();
   } catch (error) {
     console.error('Failed to save page:', error);
@@ -191,6 +239,13 @@ const [newTag, setNewTag] = useState('');
         <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
           <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl sm:p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
+              <button
+  type="button"
+  onClick={onClose}
+  className="absolute right-4 top-4 text-gray-400 hover:text-gray-500"
+>
+  ✕
+</button>
               {/* Basic Info Section */}
               <div className="space-y-4">
                 <h3 className="text-lg font-medium leading-6 text-gray-900">Basic Information</h3>
@@ -294,6 +349,16 @@ const [newTag, setNewTag] = useState('');
                       onUpload={(file) => handleImageUpload(file, 'featured')}
                       allowRemove={true}
                     />
+                    <input
+        type="text"
+        value={formData.images.alt_featured}
+        onChange={(e) => setFormData({
+          ...formData,
+          images: { ...formData.images, alt_featured: e.target.value }
+        })}
+        placeholder="ALT text for featured image"
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+      />
                   </div>
 
                   {/* Banner Image */}
@@ -305,6 +370,16 @@ const [newTag, setNewTag] = useState('');
                       onUpload={(file) => handleImageUpload(file, 'banner')}
                       allowRemove={true}
                     />
+                    <input
+        type="text"
+        value={formData.images.alt_banner}
+        onChange={(e) => setFormData({
+          ...formData,
+          images: { ...formData.images, alt_banner: e.target.value }
+        })}
+        placeholder="ALT text for banner image"
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+      />
                   </div>
                 </div>
               </div>

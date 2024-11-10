@@ -1,4 +1,3 @@
-// src/components/PagesPanel.jsx
 import React, { useState } from 'react';
 import { usePages } from '../lib/hooks/usePages';
 import { Loader2, FileText, Layout } from 'lucide-react';
@@ -6,11 +5,11 @@ import { Loader2, FileText, Layout } from 'lucide-react';
 export const PagesPanel = ({ content, lang, setShowPageForm, setEditingPage }) => {
   const brandId = content?.brand_info?.whitelabel_id;
   const {
-    pages,
-    loading: pagesLoading,
-    error,
-    deletePage,
-    refreshPages
+    pages,                // From React Query
+    loading: pagesLoading, // From React Query
+    error,                // From React Query
+    deletePage,           // Our delete function
+    refreshPages          // Our refresh function
   } = usePages(brandId, lang);
   const [deleteInProgress, setDeleteInProgress] = useState(false);
 
