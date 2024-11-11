@@ -1,143 +1,27 @@
 // src/lib/hooks/usePages.js
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { config } from '../config';
 
-const WORKER_URL = 'https://casino-pages-api.tech1960.workers.dev'; // Update this to your worker URL
+const WORKER_URL = 'https://casino-pages-api.tech1960.workers.dev';
 
 export function usePages(brandId, lang) {
-  const [pages, setPages] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  // List all pages for a brand/language
-  const listPages = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(
-        `${WORKER_URL}/api/pages?brandId=${brandId}&lang=${lang}`
-      );
-
+  // Updated React Query hook with object syntax
+  const {
+    data: pages,
+    isLoading: loading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['pages', brandId, lang],
+    queryFn: async () => {
+      const response = await fetch(`${WORKER_URL}/api/pages?brandId=${brandId}&lang=${lang}`);
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch pages');
+        throw new Error('Failed to fetch pages');
       }
-      
-      const data = await response.json();
-      setPages(data);
-      return data;
-    } catch (err) {
-      setError(err.message);
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Add new page
-  const addPage = async (pageData) => {
-    try {
-      setLoading(true);
-      
-      // Handle image uploads if needed
-      if (pageData.images) {
-        pageData.images = await uploadPageImages(pageData.images);
-      }
-
-      const response = await fetch(
-        `${WORKER_URL}/api/pages`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            brandId,
-            lang,
-            ...pageData
-          })
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create page');
-      }
-
-      await listPages();
-      return await response.json();
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Update existing page
-  const updatePage = async (pageId, updates) => {
-    try {
-      setLoading(true);
-      
-      // Handle image updates if needed
-      if (updates.images) {
-        updates.images = await uploadPageImages(updates.images);
-      }
-
-      const response = await fetch(
-        `${WORKER_URL}/api/pages/${pageId}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            pageId,
-            brandId,
-            lang,
-            ...updates
-          })
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update page');
-      }
-
-      await listPages();
-      return await response.json();
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Delete page
-  const deletePage = async (pageId) => {
-    try {
-      setLoading(true);
-      const response = await fetch(
-        `${WORKER_URL}/api/pages/${pageId}?brandId=${brandId}&lang=${lang}`,
-        {
-          method: 'DELETE'
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete page');
-      }
-
-      await listPages();
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
+      return response.json();
+    },
+    enabled: !!brandId && !!lang,
+  });
 
   // Handle image uploads
   const uploadPageImages = async (images) => {
@@ -173,12 +57,105 @@ export function usePages(brandId, lang) {
     return imageUrls;
   };
 
-  // Fetch pages on mount and when brand/lang changes
-  useEffect(() => {
-    if (brandId && lang) {
-      listPages();
+  // Add new page
+  const addPage = async (pageData) => {
+    try {
+      // Handle image uploads if needed
+      if (pageData.images) {
+        pageData.images = await uploadPageImages(pageData.images);
+      }
+
+      const response = await fetch(
+        `${WORKER_URL}/api/pages`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            brandId,
+            lang,
+            ...pageData
+          })
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create page');
+      }
+
+      await refetch(); // Use React Query's refetch
+      return await response.json();
+    } catch (err) {
+      throw err;
     }
-  }, [brandId, lang]);
+  };
+
+  // Update existing page
+  const updatePage = async (pageId, updates) => {
+    try {
+      // Handle image updates if needed
+      if (updates.images) {
+        updates.images = await uploadPageImages(updates.images);
+      }
+
+      const response = await fetch(
+        `${WORKER_URL}/api/pages/${pageId}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            pageId,
+            brandId,
+            lang,
+            ...updates
+          })
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update page');
+      }
+
+      await refetch(); // Use React Query's refetch
+      return await response.json();
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  // Delete page
+  const deletePage = async (pageId) => {
+  try {
+    const response = await fetch(`${WORKER_URL}/api/pages`, {  // Changed endpoint
+      method: 'DELETE',  // Changed to DELETE
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        pageId,
+        brandId,
+        lang,
+        key: `page:${brandId}:${lang}:${pageId}`
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to delete page');
+    }
+
+    await refetch(); // Refresh the list after successful deletion
+    return await response.json();
+  } catch (error) {
+    console.error('Delete error:', error);
+    throw error;
+  }
+};
 
   return {
     pages,
@@ -187,6 +164,6 @@ export function usePages(brandId, lang) {
     addPage,
     updatePage,
     deletePage,
-    refreshPages: listPages
+    refreshPages: refetch
   };
 }
