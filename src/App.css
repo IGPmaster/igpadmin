@@ -32,7 +32,10 @@
     animation: logo-spin infinite 20s linear;
   }
 }
-
+/* index.css or App.css */
+body {
+  @apply bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100;
+}
 .card {
   padding: 2em;
 }

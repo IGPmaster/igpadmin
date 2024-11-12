@@ -13,8 +13,10 @@ import { PageForm } from '../components/PageForm';      // Add this
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { usePromotions } from '../lib/hooks/usePromotions'; // Import promotions hook
 import { Link } from 'react-router-dom';
+import { LanguageSelector } from '../components/LanguageSelector';
+import { Notification } from '../components/Notification';
+import { ConfirmationDialog } from '../components/ConfirmationDialog';
 
-//const [activeTab, setActiveTab] = useState('content'); // Add if not exists
 
 // CopyLanguageSelector Component
 function CopyLanguageSelector({ currentLang, brandId, onCopy }) {
@@ -80,13 +82,65 @@ export function BrandEdit() {
   const [copying, setCopying] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [localContent, setLocalContent] = useState(null);
+  const [availableLangs, setAvailableLangs] = useState([]);
   const [showPromotionForm, setShowPromotionForm] = useState(false);
   const [editingPromotion, setEditingPromotion] = useState(null);
   const [showPageForm, setShowPageForm] = useState(false);
   const [editingPage, setEditingPage] = useState(null);
-  const { promotions, loading: promotionsLoading } = usePromotions(brandId, lang); // Load promotions
+  const [isAddingLanguage, setIsAddingLanguage] = useState(false);
+  const [notification, setNotification] = useState({ message: '', type: 'info' });
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingLanguageSwitch, setPendingLanguageSwitch] = useState(null);
+
+  const showNotification = (message, type = 'info') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification({ message: '', type: 'info' }), 3000);
+  };
+
+  const handleLanguageSwitch = (newLang) => {
+    if (isDirty) {
+      setPendingLanguageSwitch(newLang);
+      setShowConfirmDialog(true);
+    } else {
+      navigate(`/brands/${content.brand_info.whitelabel_id}/${newLang}`);
+    }
+  };
   
-  //console.log('Current location:', location.pathname);
+  // Add the useEffect for fetching languages
+  useEffect(() => {
+    if (content?.brand_info?.whitelabel_id) {
+      fetch(`https://worker-casino-brands.tech1960.workers.dev/list/${content.brand_info.whitelabel_id}`)
+        .then(res => res.json())
+        .then(data => {
+          setAvailableLangs(data.languages || []);
+        })
+        .catch(err => console.error('Error fetching languages:', err));
+    }
+  }, [content?.brand_info?.whitelabel_id]);
+
+  // Add handleAddLanguage function
+  const handleAddLanguage = async (brandId, newLang) => {
+    try {
+      if (!localContent) {
+        throw new Error('No content available');
+      }
+
+      const initialContent = {
+        ...localContent,
+        acf: {
+          ...localContent.acf,
+          geo_target_country_sel: [newLang]
+        }
+      };
+
+      await saveBrandContent(brandId, newLang, initialContent);
+      setAvailableLangs(prev => [...prev, newLang].sort());
+      navigate(`/brands/${brandId}/${newLang}`);
+    } catch (error) {
+      console.error('Failed to add language:', error);
+      alert('Failed to add language. Please try again.');
+    }
+  };
 
   // Initialize local content when content is loaded
   useEffect(() => {
@@ -256,30 +310,80 @@ return (
   <div className="space-y-8">
     <div className="sm:flex sm:items-center sm:justify-between">
       <div>
-        <h1 className="text-xl font-semibold text-gray-900">
+        <h1 className="text-xl font-semibold text-gray-900 pb-5">
           {content.brand_info.brand_name} (ID: {content.brand_info.whitelabel_id})
-      </h1>
-      <p className="mt-1 text-base text-gray-500">
-        Editing <span className=" items-center text-xl rounded-full bg-red-700 px-2 py-1 text-sm font-medium text-red-50 ring-1 ring-inset ring-blue-700/10">{lang.toUpperCase()}</span> version
-      </p>
-</div>
+        </h1>
 
-
-      
-      <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-      
-        <CopyLanguageSelector 
-          currentLang={lang}
-          brandId={brandId}
-          onCopy={handleCopyContent}
-        />
-        {copying && (
-          <span className="ml-2 text-sm text-gray-500">
-            Copying content...
-          </span>
+        {/* Language Pills */}
+        {availableLangs.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {availableLangs.map((language) => (
+              <button
+                key={language}
+                onClick={() => handleLanguageSwitch(language)}
+                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                  language === lang 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                }`}
+              >
+                {language}
+              </button>
+            ))}
+          </div>
         )}
+
+        {/* Add Language selector */}
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Add Language
+          </label>
+          <LanguageSelector 
+            currentLanguages={availableLangs}
+            isLoading={isAddingLanguage}
+            onSelect={async (newLang) => {
+              try {
+                setIsAddingLanguage(true);
+                showNotification('Adding new language...', 'info');
+                
+                const newContent = {
+                  ...content,
+                  acf: {
+                    ...content.acf,
+                    geo_target_country_sel: [newLang]
+                  }
+                };
+                
+                await saveBrandContent(content.brand_info.whitelabel_id, newLang, newContent);
+                setAvailableLangs(prev => [...new Set([...prev, newLang])].sort());
+                
+                showNotification('Language added successfully!', 'success');
+                navigate(`/brands/${content.brand_info.whitelabel_id}/${newLang}`);
+              } catch (error) {
+                console.error('Failed to add language:', error);
+                showNotification('Failed to add language. Please try again.', 'error');
+              } finally {
+                setIsAddingLanguage(false);
+              }
+            }}
+          />
+        </div>
       </div>
-    </div>
+
+  {/* Keep your existing Copy From Language section */}
+  <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+    <CopyLanguageSelector 
+      currentLang={lang}
+      brandId={content.brand_info.whitelabel_id}
+      onCopy={handleCopyContent}
+    />
+    {copying && (
+      <span className="ml-2 text-sm text-gray-500">
+        Copying content...
+      </span>
+    )}
+  </div>
+</div>
 
     {/* Save Button Section */}
     <div className="mt-6 flex justify-end space-x-3">
@@ -1019,17 +1123,37 @@ return (
           </div>
         </div>
       </div>
+      <Notification 
+        message={notification.message} 
+        type={notification.type} 
+      />
+      <ConfirmationDialog
+        isOpen={showConfirmDialog}
+        onClose={() => {
+          setShowConfirmDialog(false);
+          setPendingLanguageSwitch(null);
+        }}
+        onConfirm={() => {
+          if (pendingLanguageSwitch) {
+            navigate(`/brands/${content.brand_info.whitelabel_id}/${pendingLanguageSwitch}`);
+          }
+        }}
+        title="Unsaved Changes"
+        message="You have unsaved changes. Switching languages will lose these changes. Do you want to continue?"
+        confirmText="Switch Language"
+        cancelText="Stay Here"
+      />
      <PromotionForm
-  key={`promotion-${editingPromotion?.id || 'new'}`}
-  isOpen={showPromotionForm}
-  onClose={() => {
-    setShowPromotionForm(false);
-    setEditingPromotion(null);
-  }}
-  promotion={editingPromotion}
-  brandId={brandId}
-  lang={lang}
-/>
+        key={`promotion-${editingPromotion?.id || 'new'}`}
+        isOpen={showPromotionForm}
+        onClose={() => {
+          setShowPromotionForm(false);
+          setEditingPromotion(null);
+        }}
+        promotion={editingPromotion}
+        brandId={brandId}
+        lang={lang}
+      />
 
     </div>
   );
