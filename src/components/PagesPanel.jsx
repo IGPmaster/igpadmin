@@ -183,22 +183,22 @@ export const PagesPanel = ({ content, lang, setShowPageForm, setEditingPage }) =
                             {new Date(page.updated_at).toLocaleDateString()}
                           </td>
                           <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                            <button
+                            {/* <button
                               type="button"
                               className="text-blue-700 hover:text-blue-900 mr-4 bg-blue-50 border-blue-800 hover:bg-blue-100"
                               onClick={() => handleEditPage(page)}
                               disabled={deleteInProgress}
                             >
                               Edit
-                            </button>
+                            </button> */}
                             <button
-  type="button"
-  className="text-red-700 bg-red-50 border-red-700 hover:text-red-900 hover:bg-red-800 hover:text-red-50"
-  onClick={() => handleDeletePage(page.id)}
-  disabled={deleteInProgress[page.id]}
->
-  {deleteInProgress[page.id] ? 'Deleting...' : 'Delete'}
-</button>
+                              type="button"
+                              className="text-red-700 bg-red-50 border-red-700 hover:text-red-50 hover:bg-red-800 hover:text-red-50"
+                              //onClick={() => handleDeletePage(page.id)}
+                              disabled={deleteInProgress[page.id]}
+                            >
+                              {deleteInProgress[page.id] ? 'Deleting...' : 'Delete'}
+                            </button>
                           </td>
                         </tr>
                       ))
