@@ -14,7 +14,7 @@ function ImageLibrary() {
 // Hardcoded credentials
 const credentials = {
   admin: { email: 'tech@igpholding.com', password: 'password' },
-  collaborator: { email: 'micke@igpholding.com', password: 'password', brandAccess: ['brand1', 'brand2'] }, // Only has access to specific brands
+  collaborator: { email: 'micke@igpholding.com', password: 'password', brandAccess: ['brand1', 'brand2'] }, // Access to specific brands
 };
 
 function App() {
@@ -48,44 +48,51 @@ function App() {
 
   return (
     <Router>
-      <div className="p-4 flex justify-end">
+      <div className="p-4 flex justify-between items-center">
+        {/* Dark mode toggle button */}
         <button
           onClick={toggleDarkMode}
           className="inline-flex items-center justify-center rounded-md bg-gray-200 dark:bg-gray-700 px-3 py-1 text-sm font-medium text-gray-800 dark:text-gray-100"
         >
           {darkMode ? 'Light Mode' : 'Dark Mode'}
         </button>
+
+        {user && (
+          <button onClick={handleLogout} className="text-blue-600">
+            Logout
+          </button>
+        )}
       </div>
 
       {user ? (
-        <>
-          <button onClick={handleLogout} className="text-blue-600">Logout</button>
-          <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<BrandList />} />
-              {user.role === 'admin' ? (
-                <>
-                  <Route path="/brands/:brandId/:lang" element={<BrandEdit />} />
-                  <Route path="/brands/:brandId/:lang/promotions" element={<PromotionsManager />} />
-                  <Route path="/images" element={<ImageLibrary />} />
-                </>
-              ) : (
-                <>
-                  {/* Limit access to only specific brands for collaborators */}
-                  {user.brandAccess.map((brandId) => (
-                    <Route
-                      key={brandId}
-                      path={`/brands/${brandId}/:lang`}
-                      element={<BrandEdit />}
-                    />
-                  ))}
-                </>
-              )}
-            </Route>
-          </Routes>
-        </>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<BrandList darkMode={darkMode} />} />
+            {user.role === 'admin' ? (
+              <>
+                {/* Admin routes */}
+                <Route path="/brands/:brandId/:lang" element={<BrandEdit darkMode={darkMode} />} />
+                <Route path="/brands/:brandId/:lang/promotions" element={<PromotionsManager />} />
+                <Route path="/images" element={<ImageLibrary />} />
+              </>
+            ) : (
+              <>
+                {/* Collaborator routes - restricted to specific brands */}
+                {user.brandAccess.map((brandId) => (
+                  <Route
+                    key={brandId}
+                    path={`/brands/${brandId}/:lang`}
+                    element={<BrandEdit darkMode={darkMode} />}
+                  />
+                ))}
+              </>
+            )}
+          </Route>
+          {/* Redirect any unauthorized route to BrandList */}
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
       ) : (
-        // Redirect to login if not authenticated
+        // Render Login component if not authenticated
         <Routes>
           <Route path="*" element={<Login onLogin={handleLogin} />} />
         </Routes>

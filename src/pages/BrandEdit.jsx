@@ -92,6 +92,7 @@ export function BrandEdit() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingLanguageSwitch, setPendingLanguageSwitch] = useState(null);
 
+
   const showNotification = (message, type = 'info') => {
     setNotification({ message, type });
     setTimeout(() => setNotification({ message: '', type: 'info' }), 3000);
@@ -310,7 +311,7 @@ return (
   <div className="space-y-8">
     <div className="sm:flex sm:items-center sm:justify-between">
       <div>
-        <h1 className="text-xl font-semibold text-gray-900 pb-5">
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 pb-5">
           {content.brand_info.brand_name} (ID: {content.brand_info.whitelabel_id})
         </h1>
 
@@ -323,8 +324,8 @@ return (
                 onClick={() => handleLanguageSwitch(language)}
                 className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
                   language === lang 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                    ? 'bg-blue-600 dark:bg-blue-100 text-white dark:text-blue-800' 
+                    : 'bg-blue-100 dark:bg-blue-600 text-blue-800 dark:text-white hover:bg-blue-200'
                 }`}
               >
                 {language}
@@ -335,10 +336,10 @@ return (
 
         {/* Add Language selector */}
         <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-1">
             Add Language
           </label>
-          <LanguageSelector 
+          <LanguageSelector
             currentLanguages={availableLangs}
             isLoading={isAddingLanguage}
             onSelect={async (newLang) => {
@@ -395,7 +396,7 @@ return (
               setLocalContent(content);
               setIsDirty(false);
             }}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-black shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-50 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
           >
             Discard Changes
           </button>
@@ -413,13 +414,13 @@ return (
 
 
 
-      <div className="bg-white shadow sm:rounded-lg">
+      <div className="bg-white shadow sm:rounded-lg dark:bg-gray-800">
         <div className="px-4 py-5 sm:p-6 space-y-6">
 
 
 
 <Tab.Group>
-  <Tab.List className="flex space-x-1 border-b border-gray-200">
+  <Tab.List className="flex space-x-1 border-b border-gray-900">
     <Tab 
       className={({ selected }) =>
         `px-4 py-2 text-sm bg-blue-50 font-medium leading-5 
@@ -455,10 +456,10 @@ return (
   <Tab.Panels>
     <Tab.Panel>
       {/* Move your existing content div here */}
-      <div className="bg-white shadow sm:rounded-lg">
+      <div className="bg-white shadow sm:rounded-lg dark:bg-gray-800">
         {/* Images Section */}
 <div>
-  <h3 className="text-lg font-medium text-gray-900">Brand Logo</h3>
+  <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Brand Logo</h3>
   <div className="mt-4 max-w-md space-y-4">
     <ImageUpload 
       imageType="Brand Logo"
@@ -510,7 +511,7 @@ return (
     
     {/* Logo ALT text field */}
     <div>
-      <label className="block text-sm font-medium text-gray-700">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">
         Logo ALT Text (SEO)
       </label>
       <input
@@ -526,16 +527,16 @@ return (
           }));
           setIsDirty(true);
         }}
-        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
         placeholder="Enter descriptive text for the logo"
       />
     </div>
   </div>
 
-  <h3 className="text-lg font-medium text-gray-900 mt-8">Banners</h3>
+  <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mt-8">Banners</h3>
   <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
     <div>
-      <label className="block text-sm font-medium text-gray-700">Desktop Banner</label>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">Desktop Banner</label>
       <div className="mt-1 space-y-2">
         <ImageUpload 
           imageType="Desktop Banner"
@@ -585,14 +586,14 @@ return (
         />
         {/* Desktop Banner ALT text */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">
             Desktop Banner ALT Text
           </label>
           <input
             type="text"
             value={localContent.acf.image_full_alt || ''}
             onChange={(e) => handleContentChange('image_full_alt', e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
             placeholder="Enter descriptive text for desktop banner"
           />
         </div>
@@ -600,7 +601,7 @@ return (
     </div>
 
     <div>
-      <label className="block text-sm font-medium text-gray-700">Mobile Banner</label>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">Mobile Banner</label>
       <div className="mt-1 space-y-2">
         <ImageUpload 
           imageType="Mobile Banner"
@@ -650,14 +651,14 @@ return (
         />
         {/* Mobile Banner ALT text */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">
             Mobile Banner ALT Text
           </label>
           <input
             type="text"
             value={localContent.acf.image_small_alt || ''}
             onChange={(e) => handleContentChange('image_small_alt', e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
             placeholder="Enter descriptive text for mobile banner"
           />
         </div>
@@ -668,16 +669,16 @@ return (
 
 
 {/* SEO Section */}
-<div className="bg-white shadow sm:rounded-lg mt-8">
+<div className="bg-white shadow sm:rounded-lg mt-8 dark:bg-gray-900 dark:text-gray-100">
   <div className="px-4 py-5 sm:p-6 space-y-6">
-    <h3 className="text-lg font-medium text-gray-900">SEO Settings</h3>
+    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">SEO Settings</h3>
     
     <div className="space-y-6">
       {/* Meta Title */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Meta Title
-          <span className="ml-1 text-sm text-gray-500">
+          <span className="ml-1 text-sm text-gray-500 dark:text-gray-300">
             (Recommended: 50-60 characters)
           </span>
         </label>
@@ -694,7 +695,7 @@ return (
             }));
             setIsDirty(true);
           }}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
           placeholder="Enter meta title"
           maxLength={60}
         />
@@ -705,9 +706,9 @@ return (
 
       {/* Meta Description */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Meta Description
-          <span className="ml-1 text-sm text-gray-500">
+          <span className="ml-1 text-sm text-gray-500 dark:text-gray-300">
             (Recommended: 150-160 characters)
           </span>
         </label>
@@ -724,7 +725,7 @@ return (
             setIsDirty(true);
           }}
           rows={3}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
           placeholder="Enter meta description"
           maxLength={160}
         />
@@ -735,9 +736,9 @@ return (
 
       {/* Open Graph Title (for social sharing) */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Social Share Title (Open Graph)
-          <span className="ml-1 text-sm text-gray-500">
+          <span className="ml-1 text-sm text-gray-500 dark:text-gray-300">
             (Optional - defaults to Meta Title if empty)
           </span>
         </label>
@@ -754,16 +755,16 @@ return (
             }));
             setIsDirty(true);
           }}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
           placeholder="Enter social share title"
         />
       </div>
 
       {/* Open Graph Description */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Social Share Description
-          <span className="ml-1 text-sm text-gray-500">
+          <span className="ml-1 text-sm text-gray-500 dark:text-gray-300">
             (Optional - defaults to Meta Description if empty)
           </span>
         </label>
@@ -780,16 +781,16 @@ return (
             setIsDirty(true);
           }}
           rows={2}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
           placeholder="Enter social share description"
         />
       </div>
 
       {/* Focus Keywords */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Focus Keywords
-          <span className="ml-1 text-sm text-gray-500">
+          <span className="ml-1 text-sm text-gray-500 dark:text-gray-300">
             (Comma-separated, 3-5 recommended)
           </span>
         </label>
@@ -806,16 +807,16 @@ return (
             }));
             setIsDirty(true);
           }}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
           placeholder="e.g., online casino, slots, jackpot games"
         />
       </div>
 
       {/* Canonical URL */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Canonical URL
-          <span className="ml-1 text-sm text-gray-500">
+          <span className="ml-1 text-sm text-gray-500 dark:text-gray-300">
             (Optional - use for duplicate content)
           </span>
         </label>
@@ -832,14 +833,14 @@ return (
             }));
             setIsDirty(true);
           }}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
           placeholder="https://example.com/page"
         />
       </div>
 
       {/* Schema Type */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Schema Type
         </label>
         <select
@@ -854,7 +855,7 @@ return (
             }));
             setIsDirty(true);
           }}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
         >
           <option value="WebPage">Web Page</option>
           <option value="Article">Article</option>
@@ -869,20 +870,20 @@ return (
 
 {/* Content Section */}
 <div>
-  <h3 className="text-lg font-medium text-gray-900">Content</h3>
+  <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Content</h3>
   <div className="mt-4 space-y-4">
     {/* Regular text fields */}
     {Object.entries(localContent?.acf || {})
       .filter(([key]) => key.endsWith('_info'))
       .map(([key, value]) => (
         <div key={key}>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             {key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
           </label>
           <div className="mt-1">
             <textarea
               rows={3}
-              className="shadow-sm block w-full sm:text-sm border border-gray-300 rounded-md p-2 bg-gray-100 text-gray-800"
+              className="shadow-sm block w-full sm:text-sm border border-gray-300 dark:border-gray-900 rounded-md p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
               value={value || ''}
               onChange={(e) => handleContentChange(key, e.target.value)}
             />
@@ -892,14 +893,14 @@ return (
 
     {/* Promo Over/Under Content */}
 <div>
-  <label className="block text-sm font-medium text-gray-700">
+  <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">
     Promo Over Content
   </label>
   <ReactQuill
             theme="snow"
             value={localContent?.acf?.promo_over || ''}
             onChange={(content) => handleContentChange('promo_over', content)}
-            className="bg-white text-gray-800"
+            className="bg-white text-gray-800 dark:"
             modules={{
               toolbar: [
                 ['bold', 'italic', 'underline'],
@@ -912,7 +913,7 @@ return (
 </div>
 
 <div>
-  <label className="block text-sm font-medium text-gray-700">
+  <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">
     Promo Under Content
   </label>
   <ReactQuill
@@ -936,11 +937,11 @@ return (
 
     {/* Terms sections with rich text */}
     <div>
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Terms & Conditions</h3>
+      <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Terms & Conditions</h3>
       
       <div className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
             Significant Terms
           </label>
           <ReactQuill
@@ -960,7 +961,7 @@ return (
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
             Full Terms
           </label>
           <ReactQuill
@@ -1009,7 +1010,7 @@ return (
             ]}
             />
         </div>
-        <p className="mt-2 text-xs text-gray-500">
+        <p className="mt-2 text-xs text-gray-500 dark:text-gray-500">
             This is the main content area for SEO and general page content. All standard formatting options are available.
         </p>
         </div>
@@ -1024,28 +1025,6 @@ return (
       <Tab.Panel>
         <div className="bg-white shadow sm:rounded-lg">
           <div className="px-4 py-5 sm:p-6">
-            {/* Header with Add button */}
-            {/* <div className="sm:flex sm:items-center">
-              <div className="sm:flex-auto">
-                <h2 className="text-xl font-semibold text-gray-900">Promotions</h2>
-                <p className="mt-2 text-sm text-gray-700">
-                  Manage promotional content for {localContent.brand_info.brand_name}
-                </p>
-              </div>
-              <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-                <button
-                  type="button"
-                  className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
-                  onClick={() => {
-                    console.log("Add Promotion clicked");
-                    setShowPromotionForm(true);
-                  }}
-                >
-                  Add Promotion
-                </button>
-              </div>
-            </div> */}
-
             <PromotionsPanel 
           brandId={brandId}
           brandName={content.brand_info.brand_name} // Add this line
