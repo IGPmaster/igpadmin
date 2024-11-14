@@ -198,7 +198,7 @@ export function BrandList() {
       </div>
 
       {showNewBrandModal && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-gray-500 dark:bg-black dark:bg-opacity-90 bg-opacity-75 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full sm:p-6">
             <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100 text-center">
               Add New Brand

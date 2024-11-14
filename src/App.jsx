@@ -1,4 +1,4 @@
-// src/App.jsx
+/// src/App.jsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Layout } from './components/Layout';
@@ -6,22 +6,31 @@ import { BrandList } from './pages/BrandList';
 import { BrandEdit } from './pages/BrandEdit';
 import { PromotionsManager } from './pages/PromotionsManager';
 import Login from './pages/Login';
+import './lib/quill-dark.css';  // Your custom dark mode styles
 
 function ImageLibrary() {
   return <div>Image Library (Coming Soon)</div>;
 }
 
-// Hardcoded credentials
 const credentials = {
   admin: { email: 'tech@igpholding.com', password: 'password' },
-  collaborator: { email: 'micke@igpholding.com', password: 'password', brandAccess: ['brand1', 'brand2'] }, // Access to specific brands
+  collaborator: { email: 'micke@igpholding.com', password: 'password', brandAccess: ['brand1', 'brand2'] },
 };
 
 function App() {
-  const [darkMode, setDarkMode] = useState(
-    () => localStorage.getItem('darkMode') === 'true'
-  );
-  const [user, setUser] = useState(null); // To track the logged-in user
+  // Change default to true
+  const [darkMode, setDarkMode] = useState(() => {
+    const savedMode = localStorage.getItem('darkMode');
+    return savedMode === null ? true : savedMode === 'true'; // Default to true if not set
+  });
+  
+  const [user, setUser] = useState(null);
+
+  // Set dark mode on initial mount
+  useEffect(() => {
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('darkMode', 'true');
+  }, []);
 
   const toggleDarkMode = () => {
     const newDarkMode = !darkMode;

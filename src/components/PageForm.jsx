@@ -4,7 +4,7 @@ import 'react-quill/dist/quill.snow.css';
 import { config } from '../lib/config';
 import ImageUpload from './ImageUpload';
 import { Tab } from '@headlessui/react';
-import { Globe, Target, BarChart, Image, FileText } from 'lucide-react';
+import { Globe, Target, BarChart, Image, FileText, Maximize2, Minimize2 } from 'lucide-react';
 
 const TEMPLATE_OPTIONS = [
   { value: 'default', label: 'Default Page' },
@@ -20,7 +20,10 @@ const STATUS_OPTIONS = [
 ];
 
 export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
-
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const toggleFullScreen = () => {
+  setIsFullScreen(!isFullScreen);
+};
   const [newCategory, setNewCategory] = useState('');
   const [newTag, setNewTag] = useState('');
 
@@ -29,7 +32,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
     title: '',
     slug: '',
     template: 'default',
-    status: 'draft',
+    status: 'published',
     content: {
       main: '',
       excerpt: ''
@@ -244,80 +247,88 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity">
-      <div className="fixed inset-0 z-10 overflow-y-auto">
-        <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-          <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-5xl sm:p-6">
-            <button
-              type="button"
-              onClick={onClose}
-              className="absolute right-4 top-4 text-gray-400 hover:text-gray-500"
-            >
-              ✕
-            </button>
-            <h3 className="text-lg font-semibold leading-6 text-gray-900 mb-4">
+    <div className={`fixed inset-0 bg-gray-500 bg-opacity-75 dark:bg-black dark:bg-opacity-50 transition-opacity
+  ${isFullScreen ? 'z-50' : ''}`}>
+  <div className="fixed inset-0 z-10 overflow-y-auto">
+    <div className={`flex min-h-full items-end justify-center p-4 text-center sm:items-center transition-all duration-300
+      ${isFullScreen ? 'p-0' : 'sm:p-0'}`}>
+      <div className={`relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 px-4 pb-4 pt-5 text-left shadow-xl transition-all
+        ${isFullScreen 
+          ? 'w-full h-screen max-w-none rounded-none' 
+          : 'sm:my-8 sm:w-full sm:max-w-5xl sm:p-6'}`}>
+        
+        {/* Header with close and fullscreen buttons */}
+        <div className="absolute right-4 top-4 flex items-center space-x-2">
+          <button
+            type="button"
+            onClick={toggleFullScreen}
+            className="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400"
+          >
+            {isFullScreen ? (
+              <Minimize2 className="h-5 w-5" />
+            ) : (
+              <Maximize2 className="h-5 w-5" />
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400"
+          >
+            ✕
+          </button>
+        </div>
+            <h3 className="text-lg font-semibold leading-6 text-gray-900 dark:text-white mb-4">
               {page ? `Edit Page: ${page.title}` : 'New Page'}
             </h3>
 
             <form onSubmit={handleSubmit}>
-              <div className="min-h-[750px]">
+              <div className={`${isFullScreen ? 'h-[calc(100vh-180px)]' : 'min-h-[750px]'}`}>
+                <div className={`${isFullScreen ? 'h-full' : 'min-h-[700px]'}`}>
                 <Tab.Group>
-                  <Tab.List className="flex space-x-1 rounded-xl bg-gray-100 p-1 sticky top-0 z-10">
-                    <Tab className={({ selected }) =>
-                      `w-full rounded-lg py-2.5 text-sm font-medium leading-5
-                      ${selected 
-                        ? 'bg-white text-blue-700 shadow'
-                        : 'text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700'}`
-                    }>
-                      <div className="flex items-center justify-center space-x-2">
-                        <FileText className="w-4 h-4" />
-                        <span>Basic Info</span>
-                      </div>
-                    </Tab>
-                    <Tab className={({ selected }) =>
-                      `w-full rounded-lg py-2.5 text-sm font-medium leading-5
-                      ${selected 
-                        ? 'bg-white text-blue-700 shadow'
-                        : 'text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700'}`
-                    }>
-                      <div className="flex items-center justify-center space-x-2">
-                        <Image className="w-4 h-4" />
-                        <span>Media</span>
-                      </div>
-                    </Tab>
-                    <Tab className={({ selected }) =>
-                      `w-full rounded-lg py-2.5 text-sm font-medium leading-5
-                      ${selected 
-                        ? 'bg-white text-blue-700 shadow'
-                        : 'text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700'}`
-                    }>
-                      <div className="flex items-center justify-center space-x-2">
-                        <Globe className="w-4 h-4" />
-                        <span>SEO</span>
-                      </div>
-                    </Tab>
+                  <Tab.List className="flex space-x-1 rounded-xl bg-gray-100 dark:bg-gray-900 p-2 sticky top-0 z-10 dark:border-b dark:border-gray-700">
+                    {[
+                      { icon: FileText, label: 'Basic Info' },
+                      { icon: Image, label: 'Media' },
+                      { icon: Globe, label: 'SEO' }
+                    ].map((tab) => (
+                      <Tab
+                        key={tab.label}
+                        className={({ selected }) =>
+                          `w-full rounded-lg py-2.5 text-sm font-medium leading-5
+                          ${selected 
+                            ? 'bg-white text-blue-700 shadow dark:bg-gray-600 dark:text-white'
+                            : 'text-gray-900 bg-white border border-gray-300 hover:bg-gray-100 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600'}`
+                        }
+                      >
+                        <div className="flex items-center justify-center space-x-2">
+                          <tab.icon className="w-4 h-4" />
+                          <span>{tab.label}</span>
+                        </div>
+                      </Tab>
+                    ))}
                   </Tab.List>
+
                   <Tab.Panels className="mt-4">
                     {/* Basic Info Panel */}
                     <Tab.Panel className="space-y-4">
-                      {/* Title, Template & Status */}
                       <div className="grid grid-cols-3 gap-4">
                         <div className="col-span-2">
-                          <label className="block text-sm font-medium text-gray-700">Title</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-white">Title</label>
                           <input
                             type="text"
                             value={formData.title}
                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                             required
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Template</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-white">Template</label>
                           <select
                             value={formData.template}
                             onChange={(e) => setFormData({ ...formData, template: e.target.value })}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                           >
                             {TEMPLATE_OPTIONS.map(option => (
                               <option key={option.value} value={option.value}>
@@ -328,24 +339,23 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                         </div>
                       </div>
 
-                      {/* Slug & Status */}
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">URL Slug</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-white">URL Slug</label>
                           <input
                             type="text"
                             value={formData.slug}
                             onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 font-mono"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white font-mono"
                             required
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Status</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-white">Status</label>
                           <select
                             value={formData.status}
                             onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                           >
                             {STATUS_OPTIONS.map(option => (
                               <option key={option.value} value={option.value}>
@@ -356,25 +366,41 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                         </div>
                       </div>
 
-                      {/* Main Content */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Main Content</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-white">Main Content</label>
                         <div className="mt-1">
                           <ReactQuill
-                            theme="snow"
-                            value={formData.content.main}
-                            onChange={(value) => setFormData({
-                              ...formData,
-                              content: { ...formData.content, main: value }
-                            })}
-                            className="h-64 bg-white text-gray-800"
-                          />
+                        theme="snow"
+                        value={formData.content.description}
+                        onChange={(content) => setFormData({
+                          ...formData,
+                          content: { ...formData.content, description: content }
+                        })}
+                        className="h-52 mb-20"
+                        modules={{
+                          toolbar: [
+                            ['bold', 'italic', 'underline', 'strike'],
+                            ['blockquote', 'code-block'],
+                            [{ 'header': 1 }, { 'header': 2 }],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            [{ 'script': 'sub'}, { 'script': 'super' }],
+                            [{ 'indent': '-1'}, { 'indent': '+1' }],
+                            [{ 'direction': 'rtl' }],
+                            [{ 'size': ['small', false, 'large', 'huge'] }],
+                            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                            [{ 'color': [] }, { 'background': [] }],
+                            [{ 'font': [] }],
+                            [{ 'align': [] }],
+                            ['clean'],
+                            ['link', 'image']
+                          ]
+                        }}
+                      />
                         </div>
                       </div>
 
-                      {/* Excerpt */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Excerpt</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-white">Excerpt</label>
                         <textarea
                           value={formData.content.excerpt}
                           onChange={(e) => setFormData({
@@ -382,22 +408,21 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                             content: { ...formData.content, excerpt: e.target.value }
                           })}
                           rows={3}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                         />
                       </div>
 
-                      {/* Categories & Tags */}
                       <div className="grid grid-cols-2 gap-4">
                         {/* Categories */}
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Categories</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-white">Categories</label>
                           <div className="flex gap-2">
                             <input
                               type="text"
                               value={newCategory}
                               onChange={(e) => setNewCategory(e.target.value)}
                               placeholder="Add category"
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                             />
                             <button
                               type="button"
@@ -419,7 +444,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                             {formData.categories.map((category, index) => (
                               <span
                                 key={index}
-                                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
                               >
                                 {category}
                                 <button
@@ -429,7 +454,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                                     newCategories.splice(index, 1);
                                     setFormData({ ...formData, categories: newCategories });
                                   }}
-                                  className="ml-1 inline-flex items-center p-0.5 text-blue-400 hover:text-blue-600"
+                                  className="ml-1 inline-flex items-center p-0.5 text-blue-400 hover:text-blue-600 dark:text-blue-300 dark:hover:text-blue-100"
                                 >
                                   ×
                                 </button>
@@ -440,14 +465,14 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
 
                         {/* Tags */}
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Tags</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-white">Tags</label>
                           <div className="flex gap-2">
                             <input
                               type="text"
                               value={newTag}
                               onChange={(e) => setNewTag(e.target.value)}
                               placeholder="Add tag"
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                             />
                             <button
                               type="button"
@@ -469,7 +494,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                             {formData.tags.map((tag, index) => (
                               <span
                                 key={index}
-                                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
                               >
                                 {tag}
                                 <button
@@ -479,7 +504,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                                     newTags.splice(index, 1);
                                     setFormData({ ...formData, tags: newTags });
                                   }}
-                                  className="ml-1 inline-flex items-center p-0.5 text-blue-400 hover:text-blue-600"
+                                  className="ml-1 inline-flex items-center p-0.5 text-blue-400 hover:text-blue-600 dark:text-blue-300 dark:hover:text-blue-100"
                                 >
                                   ×
                                 </button>
@@ -489,15 +514,15 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                         </div>
                       </div>
                     </Tab.Panel>
+
                     {/* Media Panel */}
                     <Tab.Panel className="space-y-4">
-                      {/* Featured Image */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Featured Image</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-white">Featured Image</label>
                         <ImageUpload
                           imageType="Featured Image"
                           currentImageUrl={formData.images.featured.url}
-                          onUpload={(file) => handleImageUpload(file, 'featured')}
+                          onUpload={(file) => handleImageUpload(file,'featured')}
                           onRemove={() => handleImageDelete('featured')}
                           allowRemove={true}
                         />
@@ -517,7 +542,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                                 }
                               })}
                               placeholder="ALT text for featured image"
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                             />
                           </div>
                           <div>
@@ -535,15 +560,14 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                                 }
                               })}
                               placeholder="Focal point (e.g., center)"
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                             />
                           </div>
                         </div>
                       </div>
 
-                      {/* Banner Image */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Banner Image</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-white">Banner Image</label>
                         <ImageUpload
                           imageType="Banner Image"
                           currentImageUrl={formData.images.banner.url}
@@ -567,7 +591,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                                 }
                               })}
                               placeholder="ALT text for banner image"
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                             />
                           </div>
                           <div>
@@ -585,7 +609,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                                 }
                               })}
                               placeholder="Focal point (e.g., center)"
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                             />
                           </div>
                         </div>
@@ -594,12 +618,11 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
 
                     {/* SEO Panel */}
                     <Tab.Panel className="space-y-4">
-                      {/* Meta Title & Description */}
                       <div className="space-y-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-white">
                             Meta Title
-                            <span className="ml-2 text-sm text-gray-500">
+                            <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
                               ({formData.meta.title.length}/60)
                             </span>
                           </label>
@@ -610,15 +633,15 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                               ...formData,
                               meta: { ...formData.meta, title: e.target.value }
                             })}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                             maxLength={60}
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-white">
                             Meta Description
-                            <span className="ml-2 text-sm text-gray-500">
+                            <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
                               ({formData.meta.description.length}/160)
                             </span>
                           </label>
@@ -629,14 +652,13 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                               meta: { ...formData.meta, description: e.target.value }
                             })}
                             rows={3}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                             maxLength={160}
                           />
                         </div>
 
-                        {/* Focus Keyword */}
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Focus Keyword</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-white">Focus Keyword</label>
                           <input
                             type="text"
                             value={formData.meta.focus_keyword}
@@ -644,13 +666,12 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                               ...formData,
                               meta: { ...formData.meta, focus_keyword: e.target.value }
                             })}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                           />
                         </div>
 
-                        {/* Canonical URL */}
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Canonical URL</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-white">Canonical URL</label>
                           <input
                             type="text"
                             value={formData.meta.canonical_url}
@@ -658,14 +679,13 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                               ...formData,
                               meta: { ...formData.meta, canonical_url: e.target.value }
                             })}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                           />
                         </div>
 
-                        {/* Schema Type & Robots */}
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">Schema Type</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-white">Schema Type</label>
                             <select
                               value={formData.seo_settings.schema_type}
                               onChange={(e) => setFormData({
@@ -675,7 +695,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                                   schema_type: e.target.value
                                 }
                               })}
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800"
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                             >
                               <option value="WebPage">Web Page</option>
                               <option value="Article">Article</option>
@@ -685,7 +705,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                           </div>
                           
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">Robots</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-white">Robots</label>
                             <div className="mt-2 space-x-4">
                               <label className="inline-flex items-center">
                                 <input
@@ -698,9 +718,9 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                                       index: e.target.checked
                                     }
                                   })}
-                                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
                                 />
-                                <span className="ml-2 text-sm text-gray-700">Index</span>
+                                <span className="ml-2 text-sm text-gray-700 dark:text-gray-200">Index</span>
                               </label>
                               <label className="inline-flex items-center">
                                 <input
@@ -713,9 +733,9 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                                       follow: e.target.checked
                                     }
                                   })}
-                                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
                                 />
-                                <span className="ml-2 text-sm text-gray-700">Follow</span>
+                                <span className="ml-2 text-sm text-gray-700 dark:text-gray-200">Follow</span>
                               </label>
                             </div>
                           </div>
@@ -727,11 +747,13 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
               </div>
 
               {/* Form Actions */}
-              <div className="mt-6 flex justify-end space-x-3 pt-4 border-t">
+              {/* Form Actions */}
+                <div className={`flex justify-end space-x-3 pt-4 border-t dark:border-gray-900
+                  ${isFullScreen ? 'fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 p-4' : 'mt-6'}`}>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600"
                 >
                   Cancel
                 </button>
@@ -741,6 +763,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                 >
                   {page ? 'Update Page' : 'Create Page'}
                 </button>
+              </div>
               </div>
             </form>
           </div>

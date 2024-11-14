@@ -8,5 +8,13 @@ export default {
   theme: {
     extend: {},
   },
-  plugins: [],
+  plugins: [
+    function({ addBase }) {
+      addBase({
+        'html': { 
+          'color-scheme': 'dark',
+        }
+      })
+    },
+  ],
 }

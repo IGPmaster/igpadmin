@@ -8,17 +8,15 @@ import { useState, useEffect } from 'react';
 import ImageUpload from '../components/ImageUpload';
 import { PromotionForm } from '../components/PromotionForm';
 import { PromotionsPanel } from '../components/PromotionsPanel';
-import { PagesPanel } from '../components/PagesPanel';  // Add this
-import { PageForm } from '../components/PageForm';      // Add this
+import { PagesPanel } from '../components/PagesPanel';
+import { PageForm } from '../components/PageForm';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { usePromotions } from '../lib/hooks/usePromotions'; // Import promotions hook
+import { usePromotions } from '../lib/hooks/usePromotions';
 import { Link } from 'react-router-dom';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { Notification } from '../components/Notification';
 import { ConfirmationDialog } from '../components/ConfirmationDialog';
 
-
-// CopyLanguageSelector Component
 function CopyLanguageSelector({ currentLang, brandId, onCopy }) {
   const [availableLanguages, setAvailableLanguages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -107,7 +105,6 @@ export function BrandEdit() {
     }
   };
   
-  // Add the useEffect for fetching languages
   useEffect(() => {
     if (content?.brand_info?.whitelabel_id) {
       fetch(`https://worker-casino-brands.tech1960.workers.dev/list/${content.brand_info.whitelabel_id}`)
@@ -119,7 +116,6 @@ export function BrandEdit() {
     }
   }, [content?.brand_info?.whitelabel_id]);
 
-  // Add handleAddLanguage function
   const handleAddLanguage = async (brandId, newLang) => {
     try {
       if (!localContent) {
@@ -143,7 +139,6 @@ export function BrandEdit() {
     }
   };
 
-  // Initialize local content when content is loaded
   useEffect(() => {
     if (content) {
       setLocalContent(content);
@@ -234,7 +229,6 @@ const handleImageUpload = async (type) => {
       }));
 
       try {
-        console.log('Uploading to worker...');
         const response = await fetch('https://casino-content-admin.tech1960.workers.dev/upload', {
           method: 'POST',
           body: formData
@@ -246,7 +240,6 @@ const handleImageUpload = async (type) => {
         }
 
         const data = await response.json();
-        console.log('Upload response:', data);
 
         if (data.success) {
           const imageUrl = `https://imagedelivery.net/${config.CF_ACCOUNT_HASH}/${data.result.id}/public`;
@@ -262,12 +255,11 @@ const handleImageUpload = async (type) => {
                 }
               };
               setLocalContent(newContent);
-              setIsDirty(false); // Already saved to all languages
+              setIsDirty(false);
             } catch (err) {
               console.error('Failed to update logo across languages:', err);
             }
           } else {
-            // Declare `newContent` before using it here
             const newContent = {
               ...localContent,
               acf: {
@@ -411,512 +403,500 @@ return (
         </>
       )}
     </div>
-
-
-
       <div className="bg-white shadow sm:rounded-lg dark:bg-gray-800">
         <div className="px-4 py-5 sm:p-6 space-y-6">
-
-
-
-<Tab.Group>
-  <Tab.List className="flex space-x-1 border-b border-gray-900">
-    <Tab 
-      className={({ selected }) =>
-        `px-4 py-2 text-sm bg-blue-50 font-medium leading-5 
-        ${selected 
-          ? 'text-blue-700 border-b-2 border-blue-700' 
-          : 'text-gray-500 hover:text-gray-700'}`
-      }
-    >
-      Content
-    </Tab>
-    <Tab 
-      className={({ selected }) =>
-        `px-4 py-2 text-sm font-medium bg-blue-50 leading-5 
-        ${selected 
-          ? 'text-blue-700 border-b-2 border-blue-700' 
-          : 'text-gray-500 hover:text-gray-700'}`
-      }
-    >
-      Promotions
-    </Tab>
-    <Tab 
-      className={({ selected }) =>
-        `px-4 py-2 text-sm font-medium bg-blue-50 leading-5 
-        ${selected 
-          ? 'text-blue-700 border-b-2 border-blue-700' 
-          : 'text-gray-500 hover:text-gray-700'}`
-      }
-    >
-      Pages
-    </Tab>
-  </Tab.List>
-
-  <Tab.Panels>
-    <Tab.Panel>
-      {/* Move your existing content div here */}
-      <div className="bg-white shadow sm:rounded-lg dark:bg-gray-800">
-        {/* Images Section */}
-<div>
-  <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Brand Logo</h3>
-  <div className="mt-4 max-w-md space-y-4">
-    <ImageUpload 
-      imageType="Brand Logo"
-      currentImageUrl={localContent.brand_info.logo}
-      onUpload={async (file) => {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('metadata', JSON.stringify({
-          brand: brandId,
-          type: 'logo',
-          language: lang
-        }));
-
-        try {
-          console.log('Uploading to worker...');
-          const response = await fetch('https://casino-content-admin.tech1960.workers.dev/upload', {
-            method: 'POST',
-            body: formData
-          });
-
-          if (!response.ok) {
-            throw new Error(await response.text());
-          }
-
-          const data = await response.json();
-          console.log('Upload response:', data);
-
-          if (data.success) {
-            const imageUrl = `https://imagedelivery.net/${config.CF_ACCOUNT_HASH}/${data.result.id}/public`;
-            await updateBrandLogo(brandId, imageUrl, localContent.brand_info.logo_alt);
-            const newContent = {
-              ...localContent,
-              brand_info: {
-                ...localContent.brand_info,
-                logo: imageUrl
+        <Tab.Group>
+          <Tab.List className="flex space-x-1 border-b border-gray-900 pb-2">
+            <Tab 
+              className={({ selected }) =>
+                `px-4 py-2 text-sm bg-blue-50 font-medium leading-5 dark:bg-gray-700  
+                ${selected 
+                  ? 'text-blue-700 border-b-2 border-blue-700 dark:border-gray-500 dark:text-gray-50' 
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 dark:hover:border-gray-500'}`
               }
-            };
-            setLocalContent(newContent);
-            setIsDirty(false); // Already saved to all languages
-            return true;
-          }
-          return false;
-        } catch (err) {
-          console.error('Upload error:', err);
-          throw err;
-        }
-      }}
-    />
-    
-    {/* Logo ALT text field */}
-    <div>
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">
-        Logo ALT Text (SEO)
-      </label>
-      <input
-        type="text"
-        value={localContent.brand_info.logo_alt || ''}
-        onChange={(e) => {
-          setLocalContent(prev => ({
-            ...prev,
-            brand_info: {
-              ...prev.brand_info,
-              logo_alt: e.target.value
-            }
-          }));
-          setIsDirty(true);
-        }}
-        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
-        placeholder="Enter descriptive text for the logo"
-      />
-    </div>
-  </div>
-
-  <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mt-8">Banners</h3>
-  <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-    <div>
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">Desktop Banner</label>
-      <div className="mt-1 space-y-2">
-        <ImageUpload 
-          imageType="Desktop Banner"
-          currentImageUrl={localContent.acf.image_full}
-          onUpload={async (file) => {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('metadata', JSON.stringify({
-              brand: brandId,
-              type: 'desktop',
-              language: lang
-            }));
-
-            try {
-              console.log('Uploading to worker...');
-              const response = await fetch('https://casino-content-admin.tech1960.workers.dev/upload', {
-                method: 'POST',
-                body: formData
-              });
-
-              if (!response.ok) {
-                throw new Error(await response.text());
+            >
+              Content
+            </Tab>
+            <Tab 
+              className={({ selected }) =>
+                `px-4 py-2 text-sm bg-blue-50 font-medium leading-5 dark:bg-gray-700 
+                ${selected 
+                  ? 'text-blue-700 border-b-2 border-blue-700 dark:border-gray-500 dark:text-gray-50' 
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 dark:hover:border-gray-500'}`
               }
-
-              const data = await response.json();
-              console.log('Upload response:', data);
-
-              if (data.success) {
-                const imageUrl = `https://imagedelivery.net/${config.CF_ACCOUNT_HASH}/${data.result.id}/public`;
-                const newContent = {
-                  ...localContent,
-                  acf: {
-                    ...localContent.acf,
-                    image_full: imageUrl
-                  }
-                };
-                setLocalContent(newContent);
-                setIsDirty(true);
-                return true;
+            >
+              Promotions
+            </Tab>
+            <Tab 
+              className={({ selected }) =>
+                `px-4 py-2 text-sm bg-blue-50 font-medium leading-5 dark:bg-gray-700 
+                ${selected 
+                  ? 'text-blue-700 border-b-2 border-blue-700 dark:border-gray-500 dark:text-gray-50' 
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 dark:hover:border-gray-500'}`
               }
-              return false;
-            } catch (err) {
-              console.error('Upload error:', err);
-              throw err;
-            }
-          }}
-        />
-        {/* Desktop Banner ALT text */}
+            >
+              Pages
+            </Tab>
+          </Tab.List>
+
+          <Tab.Panels>
+            <Tab.Panel>
+              {/* Move your existing content div here */}
+              <div className="bg-white shadow sm:rounded-lg dark:bg-gray-800">
+                {/* Images Section */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">
-            Desktop Banner ALT Text
-          </label>
-          <input
-            type="text"
-            value={localContent.acf.image_full_alt || ''}
-            onChange={(e) => handleContentChange('image_full_alt', e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
-            placeholder="Enter descriptive text for desktop banner"
-          />
-        </div>
-      </div>
-    </div>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Brand Logo</h3>
+          <div className="mt-4 max-w-md space-y-4">
+            <ImageUpload 
+              imageType="Brand Logo"
+              currentImageUrl={localContent.brand_info.logo}
+              onUpload={async (file) => {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('metadata', JSON.stringify({
+                  brand: brandId,
+                  type: 'logo',
+                  language: lang
+                }));
 
-    <div>
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">Mobile Banner</label>
-      <div className="mt-1 space-y-2">
-        <ImageUpload 
-          imageType="Mobile Banner"
-          currentImageUrl={localContent.acf.image_small}
-          onUpload={async (file) => {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('metadata', JSON.stringify({
-              brand: brandId,
-              type: 'mobile',
-              language: lang
-            }));
+                try {
+                  const response = await fetch('https://casino-content-admin.tech1960.workers.dev/upload', {
+                    method: 'POST',
+                    body: formData
+                  });
 
-            try {
-              console.log('Uploading to worker...');
-              const response = await fetch('https://casino-content-admin.tech1960.workers.dev/upload', {
-                method: 'POST',
-                body: formData
-              });
-
-              if (!response.ok) {
-                throw new Error(await response.text());
-              }
-
-              const data = await response.json();
-              console.log('Upload response:', data);
-
-              if (data.success) {
-                const imageUrl = `https://imagedelivery.net/${config.CF_ACCOUNT_HASH}/${data.result.id}/public`;
-                const newContent = {
-                  ...localContent,
-                  acf: {
-                    ...localContent.acf,
-                    image_small: imageUrl
+                  if (!response.ok) {
+                    throw new Error(await response.text());
                   }
-                };
-                setLocalContent(newContent);
-                setIsDirty(true);
-                return true;
-              }
-              return false;
-            } catch (err) {
-              console.error('Upload error:', err);
-              throw err;
-            }
-          }}
-        />
-        {/* Mobile Banner ALT text */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">
-            Mobile Banner ALT Text
-          </label>
-          <input
-            type="text"
-            value={localContent.acf.image_small_alt || ''}
-            onChange={(e) => handleContentChange('image_small_alt', e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
-            placeholder="Enter descriptive text for mobile banner"
-          />
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
+                  const data = await response.json();
 
-{/* SEO Section */}
-<div className="bg-white shadow sm:rounded-lg mt-8 dark:bg-gray-900 dark:text-gray-100">
-  <div className="px-4 py-5 sm:p-6 space-y-6">
-    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">SEO Settings</h3>
-    
-    <div className="space-y-6">
-      {/* Meta Title */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Meta Title
-          <span className="ml-1 text-sm text-gray-500 dark:text-gray-300">
-            (Recommended: 50-60 characters)
-          </span>
-        </label>
-        <input
-          type="text"
-          value={localContent.yoast_head_json?.title || ''}
-          onChange={(e) => {
-            setLocalContent(prev => ({
-              ...prev,
-              yoast_head_json: {
-                ...prev.yoast_head_json,
-                title: e.target.value
-              }
-            }));
-            setIsDirty(true);
-          }}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
-          placeholder="Enter meta title"
-          maxLength={60}
-        />
-        <p className="mt-1 text-sm text-gray-500">
-          Characters: {(localContent.yoast_head_json?.title || '').length}/60
-        </p>
-      </div>
-
-      {/* Meta Description */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Meta Description
-          <span className="ml-1 text-sm text-gray-500 dark:text-gray-300">
-            (Recommended: 150-160 characters)
-          </span>
-        </label>
-        <textarea
-          value={localContent.yoast_head_json?.description || ''}
-          onChange={(e) => {
-            setLocalContent(prev => ({
-              ...prev,
-              yoast_head_json: {
-                ...prev.yoast_head_json,
-                description: e.target.value
-              }
-            }));
-            setIsDirty(true);
-          }}
-          rows={3}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
-          placeholder="Enter meta description"
-          maxLength={160}
-        />
-        <p className="mt-1 text-sm text-gray-500">
-          Characters: {(localContent.yoast_head_json?.description || '').length}/160
-        </p>
-      </div>
-
-      {/* Open Graph Title (for social sharing) */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Social Share Title (Open Graph)
-          <span className="ml-1 text-sm text-gray-500 dark:text-gray-300">
-            (Optional - defaults to Meta Title if empty)
-          </span>
-        </label>
-        <input
-          type="text"
-          value={localContent.yoast_head_json?.og_title || ''}
-          onChange={(e) => {
-            setLocalContent(prev => ({
-              ...prev,
-              yoast_head_json: {
-                ...prev.yoast_head_json,
-                og_title: e.target.value
-              }
-            }));
-            setIsDirty(true);
-          }}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
-          placeholder="Enter social share title"
-        />
-      </div>
-
-      {/* Open Graph Description */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Social Share Description
-          <span className="ml-1 text-sm text-gray-500 dark:text-gray-300">
-            (Optional - defaults to Meta Description if empty)
-          </span>
-        </label>
-        <textarea
-          value={localContent.yoast_head_json?.og_description || ''}
-          onChange={(e) => {
-            setLocalContent(prev => ({
-              ...prev,
-              yoast_head_json: {
-                ...prev.yoast_head_json,
-                og_description: e.target.value
-              }
-            }));
-            setIsDirty(true);
-          }}
-          rows={2}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
-          placeholder="Enter social share description"
-        />
-      </div>
-
-      {/* Focus Keywords */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Focus Keywords
-          <span className="ml-1 text-sm text-gray-500 dark:text-gray-300">
-            (Comma-separated, 3-5 recommended)
-          </span>
-        </label>
-        <input
-          type="text"
-          value={localContent.yoast_head_json?.focus_keywords || ''}
-          onChange={(e) => {
-            setLocalContent(prev => ({
-              ...prev,
-              yoast_head_json: {
-                ...prev.yoast_head_json,
-                focus_keywords: e.target.value
-              }
-            }));
-            setIsDirty(true);
-          }}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
-          placeholder="e.g., online casino, slots, jackpot games"
-        />
-      </div>
-
-      {/* Canonical URL */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Canonical URL
-          <span className="ml-1 text-sm text-gray-500 dark:text-gray-300">
-            (Optional - use for duplicate content)
-          </span>
-        </label>
-        <input
-          type="url"
-          value={localContent.yoast_head_json?.canonical || ''}
-          onChange={(e) => {
-            setLocalContent(prev => ({
-              ...prev,
-              yoast_head_json: {
-                ...prev.yoast_head_json,
-                canonical: e.target.value
-              }
-            }));
-            setIsDirty(true);
-          }}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
-          placeholder="https://example.com/page"
-        />
-      </div>
-
-      {/* Schema Type */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Schema Type
-        </label>
-        <select
-          value={localContent.yoast_head_json?.schema_type || 'WebPage'}
-          onChange={(e) => {
-            setLocalContent(prev => ({
-              ...prev,
-              yoast_head_json: {
-                ...prev.yoast_head_json,
-                schema_type: e.target.value
-              }
-            }));
-            setIsDirty(true);
-          }}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
-        >
-          <option value="WebPage">Web Page</option>
-          <option value="Article">Article</option>
-          <option value="Organization">Organization</option>
-          <option value="Product">Product</option>
-        </select>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-{/* Content Section */}
-<div>
-  <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Content</h3>
-  <div className="mt-4 space-y-4">
-    {/* Regular text fields */}
-    {Object.entries(localContent?.acf || {})
-      .filter(([key]) => key.endsWith('_info'))
-      .map(([key, value]) => (
-        <div key={key}>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            {key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-          </label>
-          <div className="mt-1">
-            <textarea
-              rows={3}
-              className="shadow-sm block w-full sm:text-sm border border-gray-300 dark:border-gray-900 rounded-md p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
-              value={value || ''}
-              onChange={(e) => handleContentChange(key, e.target.value)}
+                  if (data.success) {
+                    const imageUrl = `https://imagedelivery.net/${config.CF_ACCOUNT_HASH}/${data.result.id}/public`;
+                    await updateBrandLogo(brandId, imageUrl, localContent.brand_info.logo_alt);
+                    const newContent = {
+                      ...localContent,
+                      brand_info: {
+                        ...localContent.brand_info,
+                        logo: imageUrl
+                      }
+                    };
+                    setLocalContent(newContent);
+                    setIsDirty(false);
+                    return true;
+                  }
+                  return false;
+                } catch (err) {
+                  console.error('Upload error:', err);
+                  throw err;
+                }
+              }}
             />
+            
+            {/* Logo ALT text field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">
+                Logo ALT Text (SEO)
+              </label>
+              <input
+                type="text"
+                value={localContent.brand_info.logo_alt || ''}
+                onChange={(e) => {
+                  setLocalContent(prev => ({
+                    ...prev,
+                    brand_info: {
+                      ...prev.brand_info,
+                      logo_alt: e.target.value
+                    }
+                  }));
+                  setIsDirty(true);
+                }}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
+                placeholder="Enter descriptive text for the logo"
+              />
+            </div>
+          </div>
+
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mt-8">Banners</h3>
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">Desktop Banner</label>
+              <div className="mt-1 space-y-2">
+                <ImageUpload 
+                  imageType="Desktop Banner"
+                  currentImageUrl={localContent.acf.image_full}
+                  onUpload={async (file) => {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('metadata', JSON.stringify({
+                      brand: brandId,
+                      type: 'desktop',
+                      language: lang
+                    }));
+
+                    try {
+                      const response = await fetch('https://casino-content-admin.tech1960.workers.dev/upload', {
+                        method: 'POST',
+                        body: formData
+                      });
+
+                      if (!response.ok) {
+                        throw new Error(await response.text());
+                      }
+
+                      const data = await response.json();
+
+                      if (data.success) {
+                        const imageUrl = `https://imagedelivery.net/${config.CF_ACCOUNT_HASH}/${data.result.id}/public`;
+                        const newContent = {
+                          ...localContent,
+                          acf: {
+                            ...localContent.acf,
+                            image_full: imageUrl
+                          }
+                        };
+                        setLocalContent(newContent);
+                        setIsDirty(true);
+                        return true;
+                      }
+                      return false;
+                    } catch (err) {
+                      console.error('Upload error:', err);
+                      throw err;
+                    }
+                  }}
+                />
+                {/* Desktop Banner ALT text */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">
+                    Desktop Banner ALT Text
+                  </label>
+                  <input
+                    type="text"
+                    value={localContent.acf.image_full_alt || ''}
+                    onChange={(e) => handleContentChange('image_full_alt', e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
+                    placeholder="Enter descriptive text for desktop banner"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">Mobile Banner</label>
+              <div className="mt-1 space-y-2">
+                <ImageUpload 
+                  imageType="Mobile Banner"
+                  currentImageUrl={localContent.acf.image_small}
+                  onUpload={async (file) => {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('metadata', JSON.stringify({
+                      brand: brandId,
+                      type: 'mobile',
+                      language: lang
+                    }));
+
+                    try {
+                      const response = await fetch('https://casino-content-admin.tech1960.workers.dev/upload', {
+                        method: 'POST',
+                        body: formData
+                      });
+
+                      if (!response.ok) {
+                        throw new Error(await response.text());
+                      }
+
+                      const data = await response.json();
+
+                      if (data.success) {
+                        const imageUrl = `https://imagedelivery.net/${config.CF_ACCOUNT_HASH}/${data.result.id}/public`;
+                        const newContent = {
+                          ...localContent,
+                          acf: {
+                            ...localContent.acf,
+                            image_small: imageUrl
+                          }
+                        };
+                        setLocalContent(newContent);
+                        setIsDirty(true);
+                        return true;
+                      }
+                      return false;
+                    } catch (err) {
+                      console.error('Upload error:', err);
+                      throw err;
+                    }
+                  }}
+                />
+                {/* Mobile Banner ALT text */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">
+                    Mobile Banner ALT Text
+                  </label>
+                  <input
+                    type="text"
+                    value={localContent.acf.image_small_alt || ''}
+                    onChange={(e) => handleContentChange('image_small_alt', e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
+                    placeholder="Enter descriptive text for mobile banner"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      ))}
 
-    {/* Promo Over/Under Content */}
-<div>
-  <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">
-    Promo Over Content
-  </label>
-  <ReactQuill
-            theme="snow"
-            value={localContent?.acf?.promo_over || ''}
-            onChange={(content) => handleContentChange('promo_over', content)}
-            className="bg-white text-gray-800 dark:"
-            modules={{
-              toolbar: [
-                ['bold', 'italic', 'underline'],
-                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                ['link'],
-                ['clean']
-              ]
-            }}
-          />
-</div>
 
-<div>
-  <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">
-    Promo Under Content
-  </label>
-  <ReactQuill
+        {/* SEO Section */}
+        <div className="bg-white shadow sm:rounded-lg mt-8 dark:bg-gray-900 dark:text-gray-100">
+          <div className="px-4 py-5 sm:p-6 space-y-6">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">SEO Settings</h3>
+            
+            <div className="space-y-6">
+              {/* Meta Title */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Meta Title
+                  <span className="ml-1 text-sm text-gray-500 dark:text-gray-300">
+                    (Recommended: 50-60 characters)
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  value={localContent.yoast_head_json?.title || ''}
+                  onChange={(e) => {
+                    setLocalContent(prev => ({
+                      ...prev,
+                      yoast_head_json: {
+                        ...prev.yoast_head_json,
+                        title: e.target.value
+                      }
+                    }));
+                    setIsDirty(true);
+                  }}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
+                  placeholder="Enter meta title"
+                  maxLength={60}
+                />
+                <p className="mt-1 text-sm text-gray-500">
+                  Characters: {(localContent.yoast_head_json?.title || '').length}/60
+                </p>
+              </div>
+
+              {/* Meta Description */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Meta Description
+                  <span className="ml-1 text-sm text-gray-500 dark:text-gray-300">
+                    (Recommended: 150-160 characters)
+                  </span>
+                </label>
+                <textarea
+                  value={localContent.yoast_head_json?.description || ''}
+                  onChange={(e) => {
+                    setLocalContent(prev => ({
+                      ...prev,
+                      yoast_head_json: {
+                        ...prev.yoast_head_json,
+                        description: e.target.value
+                      }
+                    }));
+                    setIsDirty(true);
+                  }}
+                  rows={3}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
+                  placeholder="Enter meta description"
+                  maxLength={160}
+                />
+                <p className="mt-1 text-sm text-gray-500">
+                  Characters: {(localContent.yoast_head_json?.description || '').length}/160
+                </p>
+              </div>
+
+              {/* Open Graph Title (for social sharing) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Social Share Title (Open Graph)
+                  <span className="ml-1 text-sm text-gray-500 dark:text-gray-300">
+                    (Optional - defaults to Meta Title if empty)
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  value={localContent.yoast_head_json?.og_title || ''}
+                  onChange={(e) => {
+                    setLocalContent(prev => ({
+                      ...prev,
+                      yoast_head_json: {
+                        ...prev.yoast_head_json,
+                        og_title: e.target.value
+                      }
+                    }));
+                    setIsDirty(true);
+                  }}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
+                  placeholder="Enter social share title"
+                />
+              </div>
+
+              {/* Open Graph Description */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Social Share Description
+                  <span className="ml-1 text-sm text-gray-500 dark:text-gray-300">
+                    (Optional - defaults to Meta Description if empty)
+                  </span>
+                </label>
+                <textarea
+                  value={localContent.yoast_head_json?.og_description || ''}
+                  onChange={(e) => {
+                    setLocalContent(prev => ({
+                      ...prev,
+                      yoast_head_json: {
+                        ...prev.yoast_head_json,
+                        og_description: e.target.value
+                      }
+                    }));
+                    setIsDirty(true);
+                  }}
+                  rows={2}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
+                  placeholder="Enter social share description"
+                />
+              </div>
+
+              {/* Focus Keywords */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Focus Keywords
+                  <span className="ml-1 text-sm text-gray-500 dark:text-gray-300">
+                    (Comma-separated, 3-5 recommended)
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  value={localContent.yoast_head_json?.focus_keywords || ''}
+                  onChange={(e) => {
+                    setLocalContent(prev => ({
+                      ...prev,
+                      yoast_head_json: {
+                        ...prev.yoast_head_json,
+                        focus_keywords: e.target.value
+                      }
+                    }));
+                    setIsDirty(true);
+                  }}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
+                  placeholder="e.g., online casino, slots, jackpot games"
+                />
+              </div>
+
+              {/* Canonical URL */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Canonical URL
+                  <span className="ml-1 text-sm text-gray-500 dark:text-gray-300">
+                    (Optional - use for duplicate content)
+                  </span>
+                </label>
+                <input
+                  type="url"
+                  value={localContent.yoast_head_json?.canonical || ''}
+                  onChange={(e) => {
+                    setLocalContent(prev => ({
+                      ...prev,
+                      yoast_head_json: {
+                        ...prev.yoast_head_json,
+                        canonical: e.target.value
+                      }
+                    }));
+                    setIsDirty(true);
+                  }}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
+                  placeholder="https://example.com/page"
+                />
+              </div>
+
+              {/* Schema Type */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Schema Type
+                </label>
+                <select
+                  value={localContent.yoast_head_json?.schema_type || 'WebPage'}
+                  onChange={(e) => {
+                    setLocalContent(prev => ({
+                      ...prev,
+                      yoast_head_json: {
+                        ...prev.yoast_head_json,
+                        schema_type: e.target.value
+                      }
+                    }));
+                    setIsDirty(true);
+                  }}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
+                >
+                  <option value="WebPage">Web Page</option>
+                  <option value="Article">Article</option>
+                  <option value="Organization">Organization</option>
+                  <option value="Product">Product</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        {/* Content Section */}
+        <div>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Content</h3>
+          <div className="mt-4 space-y-4">
+            {/* Regular text fields */}
+            {Object.entries(localContent?.acf || {})
+              .filter(([key]) => key.endsWith('_info'))
+              .map(([key, value]) => (
+                <div key={key}>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                  </label>
+                  <div className="mt-1">
+                    <textarea
+                      rows={3}
+                      className="shadow-sm block w-full sm:text-sm border border-gray-300 dark:border-gray-900 rounded-md p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
+                      value={value || ''}
+                      onChange={(e) => handleContentChange(key, e.target.value)}
+                    />
+                  </div>
+                </div>
+              ))}
+
+            {/* Promo Over/Under Content */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">
+            Promo Over Content
+          </label>
+          <ReactQuill
+                    theme="snow"
+                    value={localContent?.acf?.promo_over || ''}
+                    onChange={(content) => handleContentChange('promo_over', content)}
+                    className="bg-white text-gray-800 dark:"
+                    modules={{
+                      toolbar: [
+                        ['bold', 'italic', 'underline'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['link'],
+                        ['clean']
+                      ]
+                    }}
+                  />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">
+            Promo Under Content
+          </label>
+          <ReactQuill
             theme="snow"
             value={localContent?.acf?.promo_under || ''}
             onChange={(content) => handleContentChange('promo_under', content)}
@@ -929,152 +909,139 @@ return (
                 ['clean']
               ]
             }}
-          />
-</div>
-
-
-
-
-    {/* Terms sections with rich text */}
-    <div>
-      <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Terms & Conditions</h3>
-      
-      <div className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-            Significant Terms
-          </label>
-          <ReactQuill
-            theme="snow"
-            value={localContent?.acf?.sig_terms || ''}
-            onChange={(content) => handleContentChange('sig_terms', content)}
-            className="bg-white text-gray-800"
-            modules={{
-              toolbar: [
-                ['bold', 'italic', 'underline'],
-                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                ['link'],
-                ['clean']
-              ]
-            }}
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-            Full Terms
-          </label>
-          <ReactQuill
-            theme="snow"
-            value={localContent?.acf?.full_terms || ''}
-            onChange={(content) => handleContentChange('full_terms', content)}
-            className="bg-white text-gray-800"
-            modules={{
-              toolbar: [
-                ['bold', 'italic', 'underline'],
-                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                ['link'],
-                ['clean']
-              ]
-            }}
-          />
-        </div>
-        <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Main Content</h3>
-        <div className="min-h-[400px]"> {/* Increased height for main content */}
-            <ReactQuill
-            theme="snow"
-            value={localContent?.acf?.main_content || ''}
-            onChange={(content) => handleContentChange('main_content', content)}
-            className="bg-white text-gray-800 h-96" // Taller editor
-            modules={{
-                toolbar: [
-                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-                ['bold', 'italic', 'underline', 'strike'],
-                [{ 'color': [] }, { 'background': [] }],
-                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                [{ 'indent': '-1'}, { 'indent': '+1' }],
-                ['link'],
-                [{ 'align': [] }],
-                ['clean']
-                ]
-            }}
-            formats={[
-                'header',
-                'bold', 'italic', 'underline', 'strike',
-                'color', 'background',
-                'list', 'bullet',
-                'indent',
-                'link',
-                'align'
-            ]}
             />
         </div>
-        <p className="mt-2 text-xs text-gray-500 dark:text-gray-500">
-            This is the main content area for SEO and general page content. All standard formatting options are available.
-        </p>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-      </div>
-    </Tab.Panel>
-    
-      <Tab.Panel>
-        <div className="bg-white shadow sm:rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <PromotionsPanel 
-          brandId={brandId}
-          brandName={content.brand_info.brand_name} // Add this line
-          lang={lang}
-          setShowPromotionForm={setShowPromotionForm}
-          setEditingPromotion={setEditingPromotion}
-        />
+        {/* Terms sections with rich text */}
+        <div>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Terms & Conditions</h3>
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                Significant Terms
+              </label>
+              <ReactQuill
+                theme="snow"
+                value={localContent?.acf?.sig_terms || ''}
+                onChange={(content) => handleContentChange('sig_terms', content)}
+                className="bg-white text-gray-800"
+                modules={{
+                  toolbar: [
+                    ['bold', 'italic', 'underline'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['link'],
+                    ['clean']
+                  ]
+                }}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                Full Terms
+              </label>
+              <ReactQuill
+                theme="snow"
+                value={localContent?.acf?.full_terms || ''}
+                onChange={(content) => handleContentChange('full_terms', content)}
+                className="bg-white text-gray-800"
+                modules={{
+                  toolbar: [
+                    ['bold', 'italic', 'underline'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['link'],
+                    ['clean']
+                  ]
+                }}
+              />
+            </div>
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Main Content</h3>
+                <div className="min-h-[400px]"> {/* Increased height for main content */}
+                  <ReactQuill
+                    theme="snow"
+                    value={localContent?.acf?.main_content || ''}
+                    onChange={(content) => handleContentChange('main_content', content)}
+                    className="bg-white text-gray-800 h-96"
+                    modules={{
+                      toolbar: [
+                        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'color': [] }, { 'background': [] }],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        [{ 'indent': '-1'}, { 'indent': '+1' }],
+                        ['link'],
+                        [{ 'align': [] }],
+                        ['clean']
+                      ]
+                    }}
+                    formats={[
+                      'header',
+                      'bold', 'italic', 'underline', 'strike',
+                      'color', 'background',
+                      'list', 'bullet',
+                      'indent',
+                      'link',
+                      'align'
+                    ]}
+                  />
+                </div>
+                <p className="mt-2 text-xs text-gray-500 dark:text-gray-500">
+                    This is the main content area for SEO and general page content. All standard formatting options are available.
+                </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
       </Tab.Panel>
-
       <Tab.Panel>
-        <PagesPanel 
-          content={content}
-          lang={lang}
-          setShowPageForm={setShowPageForm}
-          setEditingPage={setEditingPage}
-        />
-      </Tab.Panel>
-  </Tab.Panels>
-</Tab.Group>
-
-{/* Form Modals - keep these outside Tab.Panels */}
-{showPromotionForm && (
-  <PromotionForm
-    isOpen={showPromotionForm}
-    onClose={() => {
-      setShowPromotionForm(false);
-      setEditingPromotion(null);
-    }}
-    promotion={editingPromotion}
-    brandId={brandId}
-    lang={lang}
-  />
+        <div className="bg-white shadow sm:rounded-lg dark:bg-gray-800">
+          <div className="px-4 py-5 sm:p-6">
+            <PromotionsPanel 
+              brandId={brandId}
+              brandName={content.brand_info.brand_name}
+              lang={lang}
+              setShowPromotionForm={setShowPromotionForm}
+              setEditingPromotion={setEditingPromotion}
+            />
+          </div>
+        </div>
+        </Tab.Panel>
+        <Tab.Panel>
+          <PagesPanel 
+            content={content}
+            lang={lang}
+            setShowPageForm={setShowPageForm}
+            setEditingPage={setEditingPage}
+          />
+        </Tab.Panel>
+          </Tab.Panels>
+        </Tab.Group>
+        {/* Form Modals - keep these outside Tab.Panels */}
+        {showPromotionForm && (
+          <PromotionForm
+            isOpen={showPromotionForm}
+            onClose={() => {
+              setShowPromotionForm(false);
+              setEditingPromotion(null);
+            }}
+            promotion={editingPromotion}
+            brandId={brandId}
+            lang={lang}
+          />
+        )}
+        {showPageForm && (
+          <PageForm
+            isOpen={showPageForm}
+            onClose={() => {
+              setShowPageForm(false);
+              setEditingPage(null);
+            }}
+            page={editingPage}
+            brandId={brandId}
+            lang={lang}
+          />
 )}
-
-{showPageForm && (
-  <PageForm
-    isOpen={showPageForm}
-    onClose={() => {
-      setShowPageForm(false);
-      setEditingPage(null);
-    }}
-    page={editingPage}
-    brandId={brandId}
-    lang={lang}
-  />
-)}
-
-
           {/* Save Button Section */}
           <div className="mt-6 flex justify-end space-x-3">
             {isDirty && (
@@ -1133,7 +1100,6 @@ return (
         brandId={brandId}
         lang={lang}
       />
-
     </div>
   );
 }

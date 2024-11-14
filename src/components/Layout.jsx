@@ -14,8 +14,6 @@ export function Layout() {
           <div className="p-4">
           <Link to="/" className="block p-2 text-white bg-gray-600 rounded hover:bg-gray-300 hover:text-gray-700 transition mb-2 font-mono text-sm">Dashboard</Link>
           <Link to="/images" className="block p-2 text-white bg-gray-600 rounded hover:bg-gray-300 hover:text-gray-700 transition mb-2 font-mono text-sm">Images</Link>
-          <Link to="/seo" className="block p-2 text-white bg-gray-600 rounded hover:bg-gray-300 hover:text-gray-700 transition mb-2 font-mono text-sm">Pages</Link>
-          <Link to="/seo" className="block p-2 text-white bg-gray-600 rounded hover:bg-gray-300 hover:text-gray-700 transition mb-2 font-mono text-sm">Promotions</Link>
           </div>
         </nav>
         

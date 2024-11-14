@@ -1,4 +1,3 @@
-// src/lib/hooks/usePromotions.js
 import { useState, useEffect } from 'react';
 import { config } from '../config';
 

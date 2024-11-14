@@ -82,19 +82,19 @@ export const PagesPanel = ({ content, lang, setShowPageForm, setEditingPage }) =
   }
 
   return (
-    <div className="bg-white shadow sm:rounded-lg">
+    <div className="bg-white dark:bg-gray-800 shadow sm:rounded-lg">
       <div className="px-4 py-5 sm:p-6">
         <div className="sm:flex sm:items-center">
           <div className="sm:flex-auto">
-            <h2 className="text-xl font-semibold text-gray-900">Pages</h2>
-            <p className="mt-2 text-sm text-gray-700">
-              Manage content pages for {content?.brand_info?.brand_name}
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Pages</h2>
+            <p className="mt-2 text-sm text-gray-700 dark:text-gray-400">
+              Manage content pages
             </p>
           </div>
           <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
             <button
               type="button"
-              className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
+              className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               onClick={() => {
                 setEditingPage(null); // Reset editing state
                 setShowPageForm(true);
@@ -108,20 +108,20 @@ export const PagesPanel = ({ content, lang, setShowPageForm, setEditingPage }) =
         <div className="mt-8 flex flex-col">
           <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
             <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-              <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                <table className="min-w-full divide-y divide-gray-300">
-                  <thead className="bg-gray-50">
+              <div className="overflow-hidden shadow ring-1 ring-black/5 dark:ring-white/10 md:rounded-lg">
+                <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-900">
+                  <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
                         Title
                       </th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
                         Template
                       </th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
                         Status
                       </th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
                         Modified
                       </th>
                       <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
@@ -129,72 +129,71 @@ export const PagesPanel = ({ content, lang, setShowPageForm, setEditingPage }) =
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200 bg-white">
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
                     {pagesLoading ? (
                       <tr>
-                        <td colSpan="5" className="text-center py-4">
+                        <td colSpan="5" className="text-center py-4 dark:bg-gray-700">
                           <div className="flex justify-center items-center space-x-2">
-                            <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
-                            <span className="text-sm text-gray-500">Loading pages...</span>
+                            <Loader2 className="h-5 w-5 animate-spin text-blue-600 dark:text-blue-400" />
+                            <span className="text-sm text-gray-500 dark:text-gray-400">Loading pages...</span>
                           </div>
                         </td>
                       </tr>
                     ) : pages?.length === 0 ? (
                       <tr>
-                        <td colSpan="5" className="text-center py-4">
-                          <p className="text-sm text-gray-500">No pages found</p>
+                        <td colSpan="5" className="text-center py-4 dark:bg-gray-800">
+                          <p className="text-sm text-gray-500 dark:text-gray-400">No pages found</p>
                         </td>
                       </tr>
                     ) : (
                       pages?.map((page) => (
-                        <tr key={page.id}>
-                          <td className="whitespace-nowrap px-3 py-4 text-base text-blue-800">
+                        <tr key={page.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200">
+                          <td className="whitespace-nowrap px-3 py-4">
                             <div className="flex items-center">
                               {getTemplateIcon(page.template)}
-                              <span className="ml-2 font-medium cursor-pointer hover:underline" onClick={() => handleEditPage(page)}>{page.title}</span>
+                              <span 
+                                className="whitespace-nowrap px-3 py-4 text-base text-blue-800 dark:text-blue-400 ml-2 font-medium cursor-pointer hover:underline" 
+                                onClick={() => handleEditPage(page)}
+                              >
+                                {page.title}
+                              </span>
                             </div>
                             {page.categories?.length > 0 && (
                               <div className="mt-1 flex gap-1">
                                 {page.categories.map((category) => (
-                                  <span key={category} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                  <span 
+                                    key={category} 
+                                    className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 font-mono font-thin"
+                                  >
                                     {category}
                                   </span>
                                 ))}
                               </div>
                             )}
                           </td>
-                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 capitalize">
+                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400 capitalize">
                             {page.template}
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm">
                             <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
                               page.status === 'published' 
-                                ? 'bg-green-100 text-green-800'
+                                ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100'
                                 : page.status === 'draft'
-                                ? 'bg-gray-100 text-gray-800'
+                                ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100'
                                 : page.status === 'scheduled'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-red-100 text-red-800'
-                            }`}>
+                                ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-100'
+                                : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-100'
+                            } transition-colors duration-200`}>
                               {page.status.charAt(0).toUpperCase() + page.status.slice(1)}
                             </span>
                           </td>
-                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
                             {new Date(page.updated_at).toLocaleDateString()}
                           </td>
                           <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                            {/* <button
-                              type="button"
-                              className="text-blue-700 hover:text-blue-900 mr-4 bg-blue-50 border-blue-800 hover:bg-blue-100"
-                              onClick={() => handleEditPage(page)}
-                              disabled={deleteInProgress}
-                            >
-                              Edit
-                            </button> */}
                             <button
                               type="button"
-                              className="text-red-700 bg-red-50 border-red-700 hover:text-red-50 hover:bg-red-800 hover:text-red-50"
-                              //onClick={() => handleDeletePage(page.id)}
+                              className="text-red-700 bg-red-50 border border-red-700 dark:text-red-400 dark:bg-red-900/50 dark:border-red-500 hover:bg-red-800 hover:text-white dark:hover:bg-red-800 dark:hover:text-white px-3 py-1 rounded-md transition-colors duration-200"
                               disabled={deleteInProgress[page.id]}
                             >
                               {deleteInProgress[page.id] ? 'Deleting...' : 'Delete'}

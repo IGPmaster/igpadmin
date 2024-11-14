@@ -50,7 +50,7 @@ export function PromotionModal({ isOpen, onClose, onSave, initialData = null }) 
     valid_to: '',
     terms: '',
     geo_targeting: [getDefaultCountryForLanguage(lang)],
-    status: 'draft', // draft, active, expired
+    status: 'active', // draft, active, expired
     display_order: 0
   });
 
@@ -110,9 +110,9 @@ export function PromotionModal({ isOpen, onClose, onSave, initialData = null }) 
       className="fixed inset-0 z-50 overflow-y-auto pt-16"
     >
       <div className="flex min-h-screen text-center md:block md:px-2 lg:px-4">
-        <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
+        <Dialog.Overlay className="fixed inset-0 bg-black opacity-60" />
 
-        <div className="inline-block w-full max-w-5xl my-8 text-left align-middle transition-all transform bg-white shadow-xl rounded-lg">
+        <div className="inline-block w-full max-w-5xl my-8 text-left align-middle transition-all transform bg-white dark:bg-gray-800 shadow-xl rounded-lg">
           {/* Header */}
           <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
             <Dialog.Title className="text-lg font-medium">
