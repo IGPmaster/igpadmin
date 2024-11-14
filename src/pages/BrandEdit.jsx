@@ -89,6 +89,21 @@ export function BrandEdit() {
   const [notification, setNotification] = useState({ message: '', type: 'info' });
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingLanguageSwitch, setPendingLanguageSwitch] = useState(null);
+  const [promotionsRefreshTrigger, setPromotionsRefreshTrigger] = useState(0);
+  const [loadingLanguages, setLoadingLanguages] = useState(true);
+
+  const refreshContent = async () => {
+  try {
+    const updatedContent = await getBrandContent(brandId, lang);
+    setLocalContent(updatedContent);
+    setContent(updatedContent);
+    setIsDirty(false);
+    // Trigger promotions refresh
+    setPromotionsRefreshTrigger(prev => prev + 1);
+  } catch (error) {
+    console.error('Failed to refresh content:', error);
+  }
+};
 
 
   const showNotification = (message, type = 'info') => {
@@ -105,16 +120,18 @@ export function BrandEdit() {
     }
   };
   
-  useEffect(() => {
-    if (content?.brand_info?.whitelabel_id) {
-      fetch(`https://worker-casino-brands.tech1960.workers.dev/list/${content.brand_info.whitelabel_id}`)
-        .then(res => res.json())
-        .then(data => {
-          setAvailableLangs(data.languages || []);
-        })
-        .catch(err => console.error('Error fetching languages:', err));
-    }
-  }, [content?.brand_info?.whitelabel_id]);
+useEffect(() => {
+  if (content?.brand_info?.whitelabel_id) {
+    setLoadingLanguages(true); // Start loading
+    fetch(`https://worker-casino-brands.tech1960.workers.dev/list/${content.brand_info.whitelabel_id}`)
+      .then(res => res.json())
+      .then(data => {
+        setAvailableLangs(data.languages || []);
+      })
+      .catch(err => console.error('Error fetching languages:', err))
+      .finally(() => setLoadingLanguages(false)); // End loading
+  }
+}, [content?.brand_info?.whitelabel_id]);
 
   const handleAddLanguage = async (brandId, newLang) => {
     try {
@@ -295,9 +312,16 @@ const handleContentChange = (key, value) => {
   }));
 };
 
-if (loading) return <div>Loading...</div>;
-if (error) return <div>Error: {error}</div>;
-if (!content || !localContent) return <div>Loading content...</div>;
+// Loading indicator with slick spinner
+if (loading || !content || !localContent) return (
+  <div className="flex justify-center items-center h-full">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+    <span className="ml-3 text-gray-500 text-lg">Loading brand content...</span>
+  </div>
+);
+
+if (error) return <div className="text-red-500">Error: {error}</div>;
+
 
 return (
   <div className="space-y-8">
@@ -308,23 +332,33 @@ return (
         </h1>
 
         {/* Language Pills */}
-        {availableLangs.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {availableLangs.map((language) => (
-              <button
-                key={language}
-                onClick={() => handleLanguageSwitch(language)}
-                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                  language === lang 
-                    ? 'bg-blue-600 dark:bg-blue-100 text-white dark:text-blue-800' 
-                    : 'bg-blue-100 dark:bg-blue-600 text-blue-800 dark:text-white hover:bg-blue-200'
-                }`}
-              >
-                {language}
-              </button>
-            ))}
-          </div>
-        )}
+<div className="flex flex-wrap gap-2">
+  {loadingLanguages ? (
+    <div className="flex items-center">
+      <svg className="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+      </svg>
+      <span className="ml-2 text-gray-500 text-sm">Loading languages...</span>
+    </div>
+  ) : (
+    availableLangs.map((language) => (
+      <button
+        key={language}
+        onClick={() => handleLanguageSwitch(language)}
+        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+          language === lang 
+            ? 'bg-blue-600 dark:bg-blue-100 text-white dark:text-blue-800' 
+            : 'bg-blue-100 dark:bg-blue-600 text-blue-800 dark:text-white hover:bg-blue-200'
+        }`}
+      >
+        {language}
+      </button>
+    ))
+  )}
+</div>
+
+      
 
         {/* Add Language selector */}
         <div className="mt-4">
@@ -998,12 +1032,12 @@ return (
         <div className="bg-white shadow sm:rounded-lg dark:bg-gray-800">
           <div className="px-4 py-5 sm:p-6">
             <PromotionsPanel 
-              brandId={brandId}
-              brandName={content.brand_info.brand_name}
-              lang={lang}
-              setShowPromotionForm={setShowPromotionForm}
-              setEditingPromotion={setEditingPromotion}
-            />
+  brandId={brandId}
+  lang={lang}
+  setShowPromotionForm={setShowPromotionForm}
+  setEditingPromotion={setEditingPromotion}
+  refreshTrigger={promotionsRefreshTrigger} // Add this
+/>
           </div>
         </div>
         </Tab.Panel>
@@ -1018,30 +1052,35 @@ return (
           </Tab.Panels>
         </Tab.Group>
         {/* Form Modals - keep these outside Tab.Panels */}
-        {showPromotionForm && (
-          <PromotionForm
-            isOpen={showPromotionForm}
-            onClose={() => {
-              setShowPromotionForm(false);
-              setEditingPromotion(null);
-            }}
-            promotion={editingPromotion}
-            brandId={brandId}
-            lang={lang}
-          />
-        )}
-        {showPageForm && (
-          <PageForm
-            isOpen={showPageForm}
-            onClose={() => {
-              setShowPageForm(false);
-              setEditingPage(null);
-            }}
-            page={editingPage}
-            brandId={brandId}
-            lang={lang}
-          />
-)}
+        {/* Form Modals - keep these outside Tab.Panels */}
+          {showPromotionForm && (
+            <PromotionForm
+              key={`promotion-${editingPromotion?.id || 'new'}`}
+              isOpen={showPromotionForm}
+              onClose={() => {
+                setShowPromotionForm(false);
+                setEditingPromotion(null);
+              }}
+              promotion={editingPromotion}
+              brandId={brandId}
+              lang={lang}
+              onSave={refreshContent}
+            />
+          )}
+
+            {showPageForm && (
+              <PageForm
+                isOpen={showPageForm}
+                onClose={() => {
+                  setShowPageForm(false);
+                  setEditingPage(null);
+                }}
+                page={editingPage}
+                brandId={brandId}
+                lang={lang}
+                onSave={refreshContent}  // Add this line
+              />
+            )}
           {/* Save Button Section */}
           <div className="mt-6 flex justify-end space-x-3">
             {isDirty && (
@@ -1088,17 +1127,6 @@ return (
         message="You have unsaved changes. Switching languages will lose these changes. Do you want to continue?"
         confirmText="Switch Language"
         cancelText="Stay Here"
-      />
-     <PromotionForm
-        key={`promotion-${editingPromotion?.id || 'new'}`}
-        isOpen={showPromotionForm}
-        onClose={() => {
-          setShowPromotionForm(false);
-          setEditingPromotion(null);
-        }}
-        promotion={editingPromotion}
-        brandId={brandId}
-        lang={lang}
       />
     </div>
   );

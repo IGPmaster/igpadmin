@@ -5,9 +5,11 @@ import { config } from '../lib/config';
 import ImageUpload from '../components/ImageUpload';
 import { Tab } from '@headlessui/react';
 import { Globe, Target, BarChart, Image, FileText, Maximize2, Minimize2 } from 'lucide-react';
+import ImageLibraryModal from './ImageLibraryModal'; // Adjust the path if needed
 
 
-export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang }) {
+
+export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang, onSave }) {
   // 1. First define the data structure (not inside a hook)
   const emptyFormData = {
     title: '',
@@ -58,6 +60,9 @@ export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang
   // 2. All useState hooks together
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [formData, setFormData] = useState(emptyFormData);
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+  const [selectedImageType, setSelectedImageType] = useState(null); // to track if we are updating desktop or mobile
+
 
   // 3. All useEffect hooks together
   useEffect(() => {
@@ -161,39 +166,50 @@ export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang
     }));
   };
 
-  // Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const promoId = promotion?.id || crypto.randomUUID();
-      const key = `promo:${brandId}:${lang}:${promoId}`;
+// In PromotionForm.jsx
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const promoId = promotion?.id || crypto.randomUUID();
+    const key = `promo:${brandId}:${lang}:${promoId}`;
 
-      const promotionData = {
-        ...formData,
-        id: promoId,
-        created_at: promotion?.created_at || new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        brand_id: brandId,
-        language: lang,
-      };
+    const promotionData = {
+      ...formData,
+      id: promoId,
+      created_at: promotion?.created_at || new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      brand_id: brandId,
+      language: lang,
+    };
 
-      const response = await fetch(`https://casino-promotions-api.tech1960.workers.dev/promotions`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          key,
-          value: promotionData,
-        }),
-      });
+    const response = await fetch(`https://casino-promotions-api.tech1960.workers.dev/promotions`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        key,
+        value: promotionData,
+      }),
+    });
 
-      if (!response.ok) throw new Error('Failed to save promotion');
-      onClose();
-    } catch (error) {
-      console.error('Failed to save promotion:', error);
+    if (!response.ok) throw new Error('Failed to save promotion');
+
+    // Add these lines - Call onSave before closing
+    if (onSave) {
+      await onSave();  // This will trigger the refresh in BrandEdit
     }
-  };
+    
+    // Show success notification if you have one
+    showNotification?.('Promotion saved successfully', 'success');
+    
+    onClose();  // Close the modal only after everything is done
+  } catch (error) {
+    console.error('Failed to save promotion:', error);
+    // Show error notification if you have one
+    showNotification?.('Failed to save promotion', 'error');
+  }
+};
 
   if (!isOpen) return null;
 
@@ -448,10 +464,25 @@ export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang
 
                 {/* Media Panel */}
                 <Tab.Panel className="space-y-4">
-                  {/* Desktop Banner */}
+                 {/* Images Section */}
                   <div className="space-y-4">
+                    {/* Desktop Banner */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-white">Desktop Banner</label>
+                      
+                      {/* "Add from Library" Button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedImageType('desktop');
+                          setIsLibraryOpen(true);
+                        }}
+                        className="text-blue-600 hover:text-blue-800 mb-2"
+                      >
+                        Add from Library
+                      </button>
+                      
+                      {/* Image Upload Section */}
                       <ImageUpload
                         imageType="Desktop Banner"
                         currentImageUrl={formData.images.desktop.url}
@@ -459,6 +490,7 @@ export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang
                         onRemove={() => handleImageDelete('desktop')}
                         allowRemove={true}
                       />
+
                       <div className="mt-2 grid grid-cols-2 gap-4">
                         <div>
                           <input
@@ -502,6 +534,20 @@ export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang
                     {/* Mobile Banner */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-white">Mobile Banner</label>
+                      
+                      {/* "Add from Library" Button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedImageType('mobile');
+                          setIsLibraryOpen(true);
+                        }}
+                        className="text-blue-600 hover:text-blue-800 mb-2"
+                      >
+                        Add from Library
+                      </button>
+
+                      {/* Image Upload Section */}
                       <ImageUpload
                         imageType="Mobile Banner"
                         currentImageUrl={formData.images.mobile.url}
@@ -509,6 +555,7 @@ export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang
                         onRemove={() => handleImageDelete('mobile')}
                         allowRemove={true}
                       />
+
                       <div className="mt-2 grid grid-cols-2 gap-4">
                         <div>
                           <input
@@ -525,7 +572,7 @@ export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang
                               }
                             })}
                             placeholder="ALT text for mobile banner"
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-white font-mono text-sm"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-white font-mono"
                           />
                         </div>
                         <div>
@@ -543,12 +590,13 @@ export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang
                               }
                             })}
                             placeholder="Focal point (e.g., center)"
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-white text-sm"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-white"
                           />
                         </div>
                       </div>
                     </div>
                   </div>
+
                 </Tab.Panel>
 
                 {/* SEO Panel */}
@@ -766,6 +814,24 @@ export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang
                   {promotion ? 'Update' : 'Create'}
                 </button>
               </div>
+              {/* Image Library Modal */}
+                <ImageLibraryModal
+                  isOpen={isLibraryOpen}
+                  onClose={() => setIsLibraryOpen(false)}
+                  onSelectImage={(url) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      images: {
+                        ...prev.images,
+                        [selectedImageType]: {
+                          ...prev.images[selectedImageType],
+                          url,
+                        }
+                      }
+                    }));
+                    setIsLibraryOpen(false);
+                  }}
+                />
             </form>
           </div>
         </div>

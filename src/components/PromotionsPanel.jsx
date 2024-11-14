@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { usePromotions } from '../lib/hooks/usePromotions';
 import { Loader2 } from 'lucide-react';
 
-export const PromotionsPanel = ({ brandId, lang, setShowPromotionForm, setEditingPromotion }) => {
+
+export const PromotionsPanel = ({ brandId, lang, setShowPromotionForm, setEditingPromotion,  }) => {
   const {
     promotions,
     loading: promotionsLoading,
@@ -161,6 +162,7 @@ export const PromotionsPanel = ({ brandId, lang, setShowPromotionForm, setEditin
                               type="button"
                               className="text-red-700 bg-red-50 border border-red-700 dark:text-red-400 dark:bg-red-900/50 dark:border-red-500 hover:bg-red-800 hover:text-white dark:hover:bg-red-800 dark:hover:text-white px-3 py-1 rounded-md transition-colors duration-200"
                               disabled={deleteInProgress}
+                              onClick={() => handleDeletePromotion(promotion.id)}
                             >
                               {deleteInProgress ? 'Deleting...' : 'Delete'}
                             </button>

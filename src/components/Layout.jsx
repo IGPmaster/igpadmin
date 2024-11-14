@@ -1,6 +1,6 @@
 import { Link, Outlet } from 'react-router-dom';
 
-export function Layout() {
+function Layout() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 w-screen">
       <header className="bg-white shadow dark:bg-gray-900">
@@ -12,8 +12,8 @@ export function Layout() {
       <div className="flex container mx-auto">
         <nav className="w-64 bg-white dark:bg-gray-900">
           <div className="p-4">
-          <Link to="/" className="block p-2 text-white bg-gray-600 rounded hover:bg-gray-300 hover:text-gray-700 transition mb-2 font-mono text-sm">Dashboard</Link>
-          <Link to="/images" className="block p-2 text-white bg-gray-600 rounded hover:bg-gray-300 hover:text-gray-700 transition mb-2 font-mono text-sm">Images</Link>
+            <Link to="/" className="block p-2 text-white bg-gray-600 rounded hover:bg-gray-300 hover:text-gray-700 transition mb-2 font-mono text-sm">Dashboard</Link>
+            <Link to="/images" className="block p-2 text-white bg-gray-600 rounded hover:bg-gray-300 hover:text-gray-700 transition mb-2 font-mono text-sm">Images</Link>
           </div>
         </nav>
         
@@ -24,3 +24,5 @@ export function Layout() {
     </div>
   );
 }
+
+export default Layout;

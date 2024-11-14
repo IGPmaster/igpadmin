@@ -1,16 +1,12 @@
-/// src/App.jsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Layout } from './components/Layout';
+import Layout from './components/Layout';
 import { BrandList } from './pages/BrandList';
 import { BrandEdit } from './pages/BrandEdit';
 import { PromotionsManager } from './pages/PromotionsManager';
+import ImageLibrary from './pages/ImageLibrary';
 import Login from './pages/Login';
-import './lib/quill-dark.css';  // Your custom dark mode styles
-
-function ImageLibrary() {
-  return <div>Image Library (Coming Soon)</div>;
-}
+import './lib/quill-dark.css';
 
 const credentials = {
   admin: { email: 'tech@igpholding.com', password: 'password' },
@@ -18,7 +14,6 @@ const credentials = {
 };
 
 function App() {
-  // Change default to true
   const [darkMode, setDarkMode] = useState(() => {
     const savedMode = localStorage.getItem('darkMode');
     return savedMode === null ? true : savedMode === 'true'; // Default to true if not set
@@ -26,7 +21,6 @@ function App() {
   
   const [user, setUser] = useState(null);
 
-  // Set dark mode on initial mount
   useEffect(() => {
     document.documentElement.classList.add('dark');
     localStorage.setItem('darkMode', 'true');
@@ -58,7 +52,6 @@ function App() {
   return (
     <Router>
       <div className="p-4 flex justify-between items-center">
-        {/* Dark mode toggle button */}
         <button
           onClick={toggleDarkMode}
           className="inline-flex items-center justify-center rounded-md bg-gray-200 dark:bg-gray-700 px-3 py-1 text-sm font-medium text-gray-800 dark:text-gray-100"
@@ -79,14 +72,12 @@ function App() {
             <Route index element={<BrandList darkMode={darkMode} />} />
             {user.role === 'admin' ? (
               <>
-                {/* Admin routes */}
                 <Route path="/brands/:brandId/:lang" element={<BrandEdit darkMode={darkMode} />} />
                 <Route path="/brands/:brandId/:lang/promotions" element={<PromotionsManager />} />
                 <Route path="/images" element={<ImageLibrary />} />
               </>
             ) : (
               <>
-                {/* Collaborator routes - restricted to specific brands */}
                 {user.brandAccess.map((brandId) => (
                   <Route
                     key={brandId}
@@ -97,11 +88,9 @@ function App() {
               </>
             )}
           </Route>
-          {/* Redirect any unauthorized route to BrandList */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       ) : (
-        // Render Login component if not authenticated
         <Routes>
           <Route path="*" element={<Login onLogin={handleLogin} />} />
         </Routes>

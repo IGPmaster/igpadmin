@@ -371,10 +371,10 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                         <div className="mt-1">
                           <ReactQuill
                         theme="snow"
-                        value={formData.content.description}
+                        value={formData.content.main}
                         onChange={(content) => setFormData({
                           ...formData,
-                          content: { ...formData.content, description: content }
+                          content: { ...formData.content, main: content }
                         })}
                         className="h-52 mb-20"
                         modules={{

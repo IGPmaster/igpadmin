@@ -81,8 +81,24 @@ export function BrandList() {
     }
   };
 
-  if (loading) return <div className="p-4 text-gray-600 dark:text-gray-300">Loading brands...</div>;
-  if (error) return <div className="p-4 text-red-600 dark:text-red-400">Error loading brands: {error}</div>;
+// Full-page loading screen with slick spinner
+if (loading) return (
+  <div className="fixed inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-900 bg-opacity-75 z-50">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
+      <p className="text-xl font-semibold text-gray-700 dark:text-gray-200">Loading all your brands, hang on...</p>
+    </div>
+  </div>
+);
+
+if (error) return (
+  <div className="p-4 text-center text-red-600 dark:text-red-400">
+    Error loading page: {error}
+  </div>
+);
+
+
+
 
   return (
     <div className="space-y-6 bg-gray-100 dark:bg-gray-900 min-h-screen p-4">
@@ -198,7 +214,7 @@ export function BrandList() {
       </div>
 
       {showNewBrandModal && (
-        <div className="fixed inset-0 bg-gray-500 dark:bg-black dark:bg-opacity-90 bg-opacity-75 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full sm:p-6">
             <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100 text-center">
               Add New Brand
