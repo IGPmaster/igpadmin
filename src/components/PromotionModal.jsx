@@ -155,92 +155,69 @@ export function PromotionModal({ isOpen, onClose, onSave, initialData = null }) 
             </div>
 
             {/* Images */}
-<div className="grid grid-cols-2 gap-4">
-  {/* Desktop Image Field */}
-  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1">
-      Desktop Image
-    </label>
-    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-      {formData.images.desktop ? (
-        <div className="relative">
-          <img 
-            src={formData.images.desktop} 
-            alt="Desktop Preview"
-            className="w-full h-40 object-cover rounded"
-          />
-          <button 
-            onClick={() => handleImageUpload('desktop')}
-            className="absolute bottom-2 right-2 bg-white p-2 rounded-full shadow-lg"
-          >
-            <Upload className="w-4 h-4" />
-          </button>
-          {/* Add from Library Button */}
-          <button
-            onClick={() => {
-              setSelectedImageType('desktop');
-              setIsLibraryOpen(true);
-            }}
-            className="absolute top-2 left-2 bg-white p-2 rounded-full shadow-lg text-gray-500 hover:text-gray-700"
-          >
-            <span className="text-xs">Add from Library</span>
-          </button>
-        </div>
-      ) : (
-        <button
-          onClick={() => handleImageUpload('desktop')}
-          className="w-full h-40 flex flex-col items-center justify-center text-gray-400 hover:text-gray-500"
-        >
-          <Upload className="w-8 h-8 mb-2" />
-          <span>Upload Desktop Image</span>
-        </button>
-      )}
-    </div>
-  </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Desktop Image
+                </label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                  {formData.images.desktop ? (
+                    <div className="relative">
+                      <img 
+                        src={formData.images.desktop} 
+                        alt="Desktop Preview"
+                        className="w-full h-40 object-cover rounded"
+                      />
+                      <button 
+                        onClick={() => handleImageUpload('desktop')}
+                        className="absolute bottom-2 right-2 bg-white p-2 rounded-full shadow-lg"
+                      >
+                        <Upload className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleImageUpload('desktop')}
+                      className="w-full h-40 flex flex-col items-center justify-center text-gray-400 hover:text-gray-500"
+                    >
+                      <Upload className="w-8 h-8 mb-2" />
+                      <span>Upload Desktop Image</span>
+                    </button>
+                  )}
+                </div>
+              </div>
 
-  {/* Mobile Image Field */}
-  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1">
-      Mobile Image
-    </label>
-    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-      {formData.images.mobile ? (
-        <div className="relative">
-          <img 
-            src={formData.images.mobile} 
-            alt="Mobile Preview"
-            className="w-full h-40 object-cover rounded"
-          />
-          <button 
-            onClick={() => handleImageUpload('mobile')}
-            className="absolute bottom-2 right-2 bg-white p-2 rounded-full shadow-lg"
-          >
-            <Upload className="w-4 h-4" />
-          </button>
-          {/* Add from Library Button */}
-          <button
-            onClick={() => {
-              setSelectedImageType('mobile');
-              setIsLibraryOpen(true);
-            }}
-            className="absolute top-2 left-2 bg-white p-2 rounded-full shadow-lg text-gray-500 hover:text-gray-700"
-          >
-            <span className="text-xs">Add from Library</span>
-          </button>
-        </div>
-      ) : (
-        <button
-          onClick={() => handleImageUpload('mobile')}
-          className="w-full h-40 flex flex-col items-center justify-center text-gray-400 hover:text-gray-500"
-        >
-          <Upload className="w-8 h-8 mb-2" />
-          <span>Upload Mobile Image</span>
-        </button>
-      )}
-    </div>
-  </div>
-</div>
-
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Mobile Image
+                </label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                  {formData.images.mobile ? (
+                    <div className="relative">
+                      <img 
+                        src={formData.images.mobile} 
+                        alt="Mobile Preview"
+                        className="w-full h-40 object-cover rounded"
+                      />
+                      <button 
+                        onClick={() => handleImageUpload('mobile')}
+                        className="absolute bottom-2 right-2 bg-white p-2 rounded-full shadow-lg"
+                      >
+                        <Upload className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleImageUpload('mobile')}
+                      className="w-full h-40 flex flex-col items-center justify-center text-gray-400 hover:text-gray-500"
+                    >
+                      <Upload className="w-8 h-8 mb-2" />
+                      <span>Upload Mobile Image</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
 
             {/* Description */}
             <div>

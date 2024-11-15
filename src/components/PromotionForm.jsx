@@ -128,7 +128,6 @@ export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang
 
   // For nested fields (like in content or meta sections)
 const handleNestedFieldChange = (section, field, value) => {
-  console.log('Nested field changed:', section, field, value); // Debug log
   setFormData(prev => ({
     ...prev,
     [section]: {
@@ -256,11 +255,6 @@ const handleSave = async () => {
   if (!formData || !formData.content) {
     return null;
   }
-
-  // Add this useEffect to monitor formData changes
-  useEffect(() => {
-    console.log('formData updated:', formData);
-  }, [formData]);
 
   // Add this function near your other handlers in the PromotionForm component
   const handleDiscardChanges = () => {
@@ -571,22 +565,25 @@ const handleSave = async () => {
                          {/* Images Section */}
                           <div className="space-y-4">
                             {/* Desktop Banner */}
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 dark:text-white">Desktop Banner</label>
-                              
-                              {/* "Add from Library" Button */}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setSelectedImageType('desktop');
-                                  setIsLibraryOpen(true);
-                                }}
-                                className="text-blue-600 hover:text-blue-800 mb-2"
-                              >
-                                Add from Library
-                              </button>
-                              
-                              {/* Image Upload Section */}
+                            <div className="relative">
+                              <div className="flex justify-between items-center mb-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-white">
+                                  Desktop Banner
+                                </label>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedImageType('desktop');
+                                    setIsLibraryOpen(true);
+                                  }}
+                                  className="inline-flex items-center px-2.5 py-1.5 text-xs font-medium 
+                                    text-blue-700 bg-blue-50 border border-blue-200 rounded-md 
+                                    hover:bg-blue-100 dark:bg-blue-900/50 dark:text-blue-200 
+                                    dark:border-blue-800 dark:hover:bg-blue-900/75 transition-colors"
+                                >
+                                  Add from Library
+                                </button>
+                              </div>
                               <ImageUpload
                                 key={formData.images.desktop.url}
                                 imageType="Desktop Banner"
@@ -595,7 +592,6 @@ const handleSave = async () => {
                                 onRemove={() => handleImageDelete('desktop')}
                                 allowRemove={true}
                               />
-
                               <div className="mt-2 grid grid-cols-2 gap-4">
                                 <div>
                                   <input
@@ -637,22 +633,25 @@ const handleSave = async () => {
                             </div>
 
                             {/* Mobile Banner */}
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 dark:text-white">Mobile Banner</label>
-                              
-                              {/* "Add from Library" Button */}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setSelectedImageType('mobile');
-                                  setIsLibraryOpen(true);
-                                }}
-                                className="text-blue-600 hover:text-blue-800 mb-2"
-                              >
-                                Add from Library
-                              </button>
-
-                              {/* Image Upload Section */}
+                            <div className="relative">
+                              <div className="flex justify-between items-center mb-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-white">
+                                  Mobile Banner
+                                </label>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedImageType('mobile');
+                                    setIsLibraryOpen(true);
+                                  }}
+                                  className="inline-flex items-center px-2.5 py-1.5 text-xs font-medium 
+                                    text-blue-700 bg-blue-50 border border-blue-200 rounded-md 
+                                    hover:bg-blue-100 dark:bg-blue-900/50 dark:text-blue-200 
+                                    dark:border-blue-800 dark:hover:bg-blue-900/75 transition-colors"
+                                >
+                                  Add from Library
+                                </button>
+                              </div>
                               <ImageUpload
                                 key={formData.images.mobile.url}
                                 imageType="Mobile Banner"
@@ -661,7 +660,6 @@ const handleSave = async () => {
                                 onRemove={() => handleImageDelete('mobile')}
                                 allowRemove={true}
                               />
-
                               <div className="mt-2 grid grid-cols-2 gap-4">
                                 <div>
                                   <input

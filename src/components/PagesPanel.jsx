@@ -33,7 +33,6 @@ export const PagesPanel = ({ content, lang, setShowPageForm, setEditingPage }) =
 
   // Function to handle deleting a page
 const handleDeletePage = async (pageId) => {
-    console.log('Delete clicked for page:', pageId); // Debug log
     
     if (!window.confirm('Are you sure you want to delete this page?')) {
       return;
@@ -50,10 +49,6 @@ const handleDeletePage = async (pageId) => {
       setDeleteInProgress(false); // Make sure this runs
     }
   };
-
- useEffect(() => {
-    console.log('Delete in progress:', deleteInProgress);
-  }, [deleteInProgress]);
 
   // Function to determine the correct icon for the template
   const getTemplateIcon = (template) => {
@@ -191,7 +186,6 @@ const handleDeletePage = async (pageId) => {
                          <button
         type="button"
         onClick={() => {
-          console.log('Delete button clicked'); // Debug log
           handleDeletePage(page.id);
         }}
         disabled={deleteInProgress}

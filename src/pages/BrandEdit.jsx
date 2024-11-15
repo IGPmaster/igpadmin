@@ -16,6 +16,7 @@ import { Link } from 'react-router-dom';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { Notification } from '../components/Notification';
 import { ConfirmationDialog } from '../components/ConfirmationDialog';
+import ImageLibraryModal from '../components/ImageLibraryModal';
 
 function CopyLanguageSelector({ currentLang, brandId, onCopy }) {
   const [availableLanguages, setAvailableLanguages] = useState([]);
@@ -94,6 +95,8 @@ export function BrandEdit() {
   const [currentTab, setCurrentTab] = useState(0);
   const [forceRefresh, setForceRefresh] = useState(0);
   const [forceRefreshPages, setForceRefreshPages] = useState(0);
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+  const [selectedImageType, setSelectedImageType] = useState(null);
 
   const showNotification = (message, type = 'info') => {
     setNotification({ message, type });
@@ -470,51 +473,69 @@ return (
         <div>
           <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Brand Logo</h3>
           <div className="mt-4 max-w-md space-y-4">
-            <ImageUpload 
-              imageType="Brand Logo"
-              currentImageUrl={localContent.brand_info.logo}
-              onUpload={async (file) => {
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('metadata', JSON.stringify({
-                  brand: brandId,
-                  type: 'logo',
-                  language: lang
-                }));
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">Brand Logo</label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedImageType('logo');
+                    setIsLibraryOpen(true);
+                  }}
+                  className="inline-flex items-center px-2.5 py-1.5 text-xs font-medium 
+                    text-blue-700 bg-blue-50 border border-blue-200 rounded-md 
+                    hover:bg-blue-100 dark:bg-blue-900/50 dark:text-blue-200 
+                    dark:border-blue-800 dark:hover:bg-blue-900/75 transition-colors"
+                >
+                  Add from Library
+                </button>
+              </div>
+              <ImageUpload 
+                imageType="Brand Logo"
+                currentImageUrl={localContent.brand_info.logo}
+                onUpload={async (file) => {
+                  const formData = new FormData();
+                  formData.append('file', file);
+                  formData.append('metadata', JSON.stringify({
+                    brand: brandId,
+                    type: 'logo',
+                    language: lang
+                  }));
 
-                try {
-                  const response = await fetch('https://casino-content-admin.tech1960.workers.dev/upload', {
-                    method: 'POST',
-                    body: formData
-                  });
+                  try {
+                    const response = await fetch('https://casino-content-admin.tech1960.workers.dev/upload', {
+                      method: 'POST',
+                      body: formData
+                    });
 
-                  if (!response.ok) {
-                    throw new Error(await response.text());
+                    if (!response.ok) {
+                      throw new Error(await response.text());
+                    }
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                      const imageUrl = `https://imagedelivery.net/${config.CF_ACCOUNT_HASH}/${data.result.id}/public`;
+                      await updateBrandLogo(brandId, imageUrl, localContent.brand_info.logo_alt);
+                      const newContent = {
+                        ...localContent,
+                        brand_info: {
+                          ...localContent.brand_info,
+                          logo: imageUrl
+                        }
+                      };
+                      setLocalContent(newContent);
+                      setIsDirty(false);
+                      return true;
+                    }
+                    return false;
+                  } catch (err) {
+                    console.error('Upload error:', err);
+                    throw err;
                   }
-
-                  const data = await response.json();
-
-                  if (data.success) {
-                    const imageUrl = `https://imagedelivery.net/${config.CF_ACCOUNT_HASH}/${data.result.id}/public`;
-                    await updateBrandLogo(brandId, imageUrl, localContent.brand_info.logo_alt);
-                    const newContent = {
-                      ...localContent,
-                      brand_info: {
-                        ...localContent.brand_info,
-                        logo: imageUrl
-                      }
-                    };
-                    setLocalContent(newContent);
-                    setIsDirty(false);
-                    return true;
-                  }
-                  return false;
-                } catch (err) {
-                  console.error('Upload error:', err);
-                  throw err;
-                }
-              }}
-            />
+                }}
+              />
+            </div>
             
             {/* Logo ALT text field */}
             <div>
@@ -543,129 +564,155 @@ return (
           <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mt-8">Banners</h3>
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">Desktop Banner</label>
-              <div className="mt-1 space-y-2">
-                <ImageUpload 
-                  imageType="Desktop Banner"
-                  currentImageUrl={localContent.acf.image_full}
-                  onUpload={async (file) => {
-                    const formData = new FormData();
-                    formData.append('file', file);
-                    formData.append('metadata', JSON.stringify({
-                      brand: brandId,
-                      type: 'desktop',
-                      language: lang
-                    }));
-
-                    try {
-                      const response = await fetch('https://casino-content-admin.tech1960.workers.dev/upload', {
-                        method: 'POST',
-                        body: formData
-                      });
-
-                      if (!response.ok) {
-                        throw new Error(await response.text());
-                      }
-
-                      const data = await response.json();
-
-                      if (data.success) {
-                        const imageUrl = `https://imagedelivery.net/${config.CF_ACCOUNT_HASH}/${data.result.id}/public`;
-                        const newContent = {
-                          ...localContent,
-                          acf: {
-                            ...localContent.acf,
-                            image_full: imageUrl
-                          }
-                        };
-                        setLocalContent(newContent);
-                        setIsDirty(true);
-                        return true;
-                      }
-                      return false;
-                    } catch (err) {
-                      console.error('Upload error:', err);
-                      throw err;
-                    }
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">Desktop Banner</label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedImageType('desktop');
+                    setIsLibraryOpen(true);
                   }}
-                />
-                {/* Desktop Banner ALT text */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">
-                    Desktop Banner ALT Text
-                  </label>
-                  <input
-                    type="text"
-                    value={localContent.acf.image_full_alt || ''}
-                    onChange={(e) => handleContentChange('image_full_alt', e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
-                    placeholder="Enter descriptive text for desktop banner"
-                  />
-                </div>
+                  className="inline-flex items-center px-2.5 py-1.5 text-xs font-medium 
+                    text-blue-700 bg-blue-50 border border-blue-200 rounded-md 
+                    hover:bg-blue-100 dark:bg-blue-900/50 dark:text-blue-200 
+                    dark:border-blue-800 dark:hover:bg-blue-900/75 transition-colors"
+                >
+                  Add from Library
+                </button>
               </div>
+              <ImageUpload 
+                imageType="Desktop Banner"
+                currentImageUrl={localContent.acf.image_full}
+                onUpload={async (file) => {
+                  const formData = new FormData();
+                  formData.append('file', file);
+                  formData.append('metadata', JSON.stringify({
+                    brand: brandId,
+                    type: 'desktop',
+                    language: lang
+                  }));
+
+                  try {
+                    const response = await fetch('https://casino-content-admin.tech1960.workers.dev/upload', {
+                      method: 'POST',
+                      body: formData
+                    });
+
+                    if (!response.ok) {
+                      throw new Error(await response.text());
+                    }
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                      const imageUrl = `https://imagedelivery.net/${config.CF_ACCOUNT_HASH}/${data.result.id}/public`;
+                      const newContent = {
+                        ...localContent,
+                        acf: {
+                          ...localContent.acf,
+                          image_full: imageUrl
+                        }
+                      };
+                      setLocalContent(newContent);
+                      setIsDirty(true);
+                      return true;
+                    }
+                    return false;
+                  } catch (err) {
+                    console.error('Upload error:', err);
+                    throw err;
+                  }
+                }}
+              />
+            </div>
+            {/* Desktop Banner ALT text */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">
+                Desktop Banner ALT Text
+              </label>
+              <input
+                type="text"
+                value={localContent.acf.image_full_alt || ''}
+                onChange={(e) => handleContentChange('image_full_alt', e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
+                placeholder="Enter descriptive text for desktop banner"
+              />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">Mobile Banner</label>
-              <div className="mt-1 space-y-2">
-                <ImageUpload 
-                  imageType="Mobile Banner"
-                  currentImageUrl={localContent.acf.image_small}
-                  onUpload={async (file) => {
-                    const formData = new FormData();
-                    formData.append('file', file);
-                    formData.append('metadata', JSON.stringify({
-                      brand: brandId,
-                      type: 'mobile',
-                      language: lang
-                    }));
-
-                    try {
-                      const response = await fetch('https://casino-content-admin.tech1960.workers.dev/upload', {
-                        method: 'POST',
-                        body: formData
-                      });
-
-                      if (!response.ok) {
-                        throw new Error(await response.text());
-                      }
-
-                      const data = await response.json();
-
-                      if (data.success) {
-                        const imageUrl = `https://imagedelivery.net/${config.CF_ACCOUNT_HASH}/${data.result.id}/public`;
-                        const newContent = {
-                          ...localContent,
-                          acf: {
-                            ...localContent.acf,
-                            image_small: imageUrl
-                          }
-                        };
-                        setLocalContent(newContent);
-                        setIsDirty(true);
-                        return true;
-                      }
-                      return false;
-                    } catch (err) {
-                      console.error('Upload error:', err);
-                      throw err;
-                    }
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">Mobile Banner</label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedImageType('mobile');
+                    setIsLibraryOpen(true);
                   }}
-                />
-                {/* Mobile Banner ALT text */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">
-                    Mobile Banner ALT Text
-                  </label>
-                  <input
-                    type="text"
-                    value={localContent.acf.image_small_alt || ''}
-                    onChange={(e) => handleContentChange('image_small_alt', e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
-                    placeholder="Enter descriptive text for mobile banner"
-                  />
-                </div>
+                  className="inline-flex items-center px-2.5 py-1.5 text-xs font-medium 
+                    text-blue-700 bg-blue-50 border border-blue-200 rounded-md 
+                    hover:bg-blue-100 dark:bg-blue-900/50 dark:text-blue-200 
+                    dark:border-blue-800 dark:hover:bg-blue-900/75 transition-colors"
+                >
+                  Add from Library
+                </button>
               </div>
+              <ImageUpload 
+                imageType="Mobile Banner"
+                currentImageUrl={localContent.acf.image_small}
+                onUpload={async (file) => {
+                  const formData = new FormData();
+                  formData.append('file', file);
+                  formData.append('metadata', JSON.stringify({
+                    brand: brandId,
+                    type: 'mobile',
+                    language: lang
+                  }));
+
+                  try {
+                    const response = await fetch('https://casino-content-admin.tech1960.workers.dev/upload', {
+                      method: 'POST',
+                      body: formData
+                    });
+
+                    if (!response.ok) {
+                      throw new Error(await response.text());
+                    }
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                      const imageUrl = `https://imagedelivery.net/${config.CF_ACCOUNT_HASH}/${data.result.id}/public`;
+                      const newContent = {
+                        ...localContent,
+                        acf: {
+                          ...localContent.acf,
+                          image_small: imageUrl
+                        }
+                      };
+                      setLocalContent(newContent);
+                      setIsDirty(true);
+                      return true;
+                    }
+                    return false;
+                  } catch (err) {
+                    console.error('Upload error:', err);
+                    throw err;
+                  }
+                }}
+              />
+            </div>
+            {/* Mobile Banner ALT text */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">
+                Mobile Banner ALT Text
+              </label>
+              <input
+                type="text"
+                value={localContent.acf.image_small_alt || ''}
+                onChange={(e) => handleContentChange('image_small_alt', e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
+                placeholder="Enter descriptive text for mobile banner"
+              />
             </div>
           </div>
         </div>
@@ -977,7 +1024,7 @@ return (
               />
             </div>
             <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Main Content</h3>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Main Content</h3>
                 <div className="min-h-[400px]"> {/* Increased height for main content */}
                   <ReactQuill
                     theme="snow"
@@ -1120,6 +1167,39 @@ return (
         message="You have unsaved changes. Switching languages will lose these changes. Do you want to continue?"
         confirmText="Switch Language"
         cancelText="Stay Here"
+      />
+      <ImageLibraryModal
+        isOpen={isLibraryOpen}
+        onClose={() => setIsLibraryOpen(false)}
+        onSelectImage={(url) => {
+          if (selectedImageType === 'logo') {
+            setLocalContent(prev => ({
+              ...prev,
+              brand_info: {
+                ...prev.brand_info,
+                logo: url
+              }
+            }));
+          } else if (selectedImageType === 'desktop') {
+            setLocalContent(prev => ({
+              ...prev,
+              acf: {
+                ...prev.acf,
+                image_full: url
+              }
+            }));
+          } else if (selectedImageType === 'mobile') {
+            setLocalContent(prev => ({
+              ...prev,
+              acf: {
+                ...prev.acf,
+                image_small: url
+              }
+            }));
+          }
+          setIsLibraryOpen(false);
+          setIsDirty(true);
+        }}
       />
     </div>
   );

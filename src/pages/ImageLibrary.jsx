@@ -4,6 +4,28 @@ import ImageUpload from '../components/ImageUpload';
 
 const WORKER_URL = 'https://casino-content-admin.tech1960.workers.dev';
 const IMAGE_LIBRARY_URL = 'https://image-library-worker.tech1960.workers.dev/images/list';
+const DELETE_IMAGE_URL = 'https://image-library-worker.tech1960.workers.dev/images';
+
+const LibraryImageUpload = ({ onUpload }) => {
+  const [key, setKey] = useState(0);
+
+  const handleUpload = async (file) => {
+    const success = await onUpload(file);
+    if (success) {
+      setTimeout(() => setKey(prev => prev + 1), 1500);
+    }
+    return success;
+  };
+
+  return (
+    <ImageUpload 
+      key={key}
+      onUpload={handleUpload}
+      imageType="Library Image"
+      allowRemove={false}
+    />
+  );
+};
 
 export default function ImageLibrary() {
   const [images, setImages] = useState([]);
@@ -12,43 +34,38 @@ export default function ImageLibrary() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-useEffect(() => {
-  const fetchImages = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      // Fetch images from the new image-library-worker endpoint
-      const response = await fetch(IMAGE_LIBRARY_URL, {
-        method: 'GET',
-      });
+  useEffect(() => {
+    const fetchImages = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(IMAGE_LIBRARY_URL, {
+          method: 'GET',
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch images');
+        if (!response.ok) {
+          throw new Error('Failed to fetch images');
+        }
+
+        const data = await response.json();
+
+        const processedImages = data.map((item) => ({
+          id: item.id,
+          url: item.url,
+          filename: item.filename || 'Untitled',
+          uploaded: item.uploaded || new Date().toISOString(),
+        }));
+
+        setImages(processedImages);
+      } catch (error) {
+        setError(`Failed to load images: ${error.message}`);
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      const data = await response.json();
-      console.log('Fetched image data:', data); // Debug log
-
-      // Map data to match the structure expected in ImageLibrary
-      const processedImages = data.map((item) => ({
-        id: item.id,
-        url: item.url, // Use the direct URL provided by the Worker
-        filename: item.filename || 'Untitled', // Ensure fallback if no filename
-        uploaded: item.uploaded || new Date().toISOString(), // Metadata if needed
-      }));
-
-      setImages(processedImages);
-    } catch (error) {
-      console.error('Fetch error:', error);
-      setError(`Failed to load images: ${error.message}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  fetchImages();
-}, []);
-
+    fetchImages();
+  }, []);
 
   const handleUpload = async (file) => {
     const formData = new FormData();
@@ -67,21 +84,23 @@ useEffect(() => {
       if (!response.ok) {
         throw new Error('Upload failed');
       }
-console.log("Rendering image with URL:", image.url);
 
       const data = await response.json();
       if (data.success) {
-        setImages(prev => [{
+        const newImage = {
           id: data.result.id,
           url: `https://imagedelivery.net/${config.CF_ACCOUNT_HASH}/${data.result.id}/public`,
           filename: file.name,
           uploaded: new Date().toISOString()
-        }, ...prev]);
+        };
+
+        setImages(prev => [newImage, ...prev]);
+        return true;
       }
     } catch (error) {
-      console.error('Upload error:', error);
       setError('Failed to upload image');
     }
+    return false;
   };
 
   const handleDelete = async (imageId) => {
@@ -91,18 +110,21 @@ console.log("Rendering image with URL:", image.url);
 
     setIsDeleting(imageId);
     try {
-      const response = await fetch(`${WORKER_URL}/kv?key=image:${imageId}`, {
+      const response = await fetch(`${DELETE_IMAGE_URL}/${imageId}`, {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        }
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete image');
+        const errorText = await response.text();
+        throw new Error(`Server returned ${response.status}: ${errorText}`);
       }
 
       setImages(prev => prev.filter(img => img.id !== imageId));
     } catch (error) {
-      console.error('Delete error:', error);
-      setError('Failed to delete image');
+      setError(`Failed to delete image: ${error.message}`);
     } finally {
       setIsDeleting(null);
     }
@@ -118,11 +140,7 @@ console.log("Rendering image with URL:", image.url);
     <div className="p-4">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Image Library</h2>
-        <ImageUpload 
-          onUpload={handleUpload} 
-          imageType="Library Image"
-          allowRemove={false}
-        />
+        <LibraryImageUpload onUpload={handleUpload} />
       </div>
       
       <input
@@ -168,27 +186,27 @@ console.log("Rendering image with URL:", image.url);
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   {new Date(image.uploaded).toLocaleDateString()}
                 </p>
-               <div className="mt-2 flex items-center space-x-2">
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(image.url);
-                    alert('URL copied to clipboard!');
-                  }}
-                  className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                >
-                  Copy URL
-                </button>
-              
-                <span className="text-gray-300 dark:text-gray-600">|</span>
-                <a
-                  href={image.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                >
-                  View Full Size
-                </a>
-              </div>
+                <div className="mt-2 flex items-center space-x-2">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(image.url);
+                      alert('URL copied to clipboard!');
+                    }}
+                    className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                  >
+                    Copy URL
+                  </button>
+                
+                  <span className="text-gray-300 dark:text-gray-600">|</span>
+                  <a
+                    href={image.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                  >
+                    View Full Size
+                  </a>
+                </div>
               </div>
             </div>
           ))}

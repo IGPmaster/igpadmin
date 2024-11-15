@@ -133,71 +133,73 @@ if (error) return (
         {brands.map((brand) => (
           <div
             key={brand.id}
-            className="relative rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-md hover:shadow-lg transition duration-200 ease-in-out flex flex-col space-y-4"
+            className="relative rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-md hover:shadow-lg transition duration-200 ease-in-out flex flex-col h-full"
           >
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{brand.name}</h3>
-                <span className="mt-1 text-xs font-mono bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded">
-                  ID: {brand.whitelabel_id}
-                </span>
+            <div className="flex-1 space-y-4">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{brand.name}</h3>
+                  <span className="mt-1 text-xs font-mono bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded">
+                    ID: {brand.whitelabel_id}
+                  </span>
+                </div>
+                <div>
+                  {brand.brand_info?.logo ? (
+                    <img 
+                      src={brand.brand_info.logo} 
+                      alt={brand.brand_info.logo_alt || `${brand.name} logo`}
+                      className="h-12 object-contain max-w-[100px]" 
+                    />
+                  ) : (
+                    <p className="text-gray-400 dark:text-gray-500 text-xs">No logo available</p>
+                  )}
+                </div>
               </div>
-              <div>
-                {brand.brand_info?.logo ? (
-                  <img 
-                    src={brand.brand_info.logo} 
-                    alt={brand.brand_info.logo_alt || `${brand.name} logo`}
-                    className="h-12 object-contain max-w-[100px]" 
-                  />
-                ) : (
-                  <p className="text-gray-400 dark:text-gray-500 text-xs">No logo available</p>
-                )}
+
+              {/* Traffic Data */}
+              {brand.trafficData ? (
+                <div className="grid grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-sm">
+                  <div>
+                    <p className="text-gray-500 dark:text-gray-400">24h Views</p>
+                    <p className="font-semibold text-gray-700 dark:text-gray-100">{brand.trafficData.traffic24h || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 dark:text-gray-400">30d Requests</p>
+                    <p className="font-semibold text-gray-700 dark:text-gray-100">{brand.trafficData.requests30d || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 dark:text-gray-400">Bandwidth</p>
+                    <p className="font-semibold text-gray-700 dark:text-gray-100">{brand.trafficData.bandwidth || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 dark:text-gray-400">Security</p>
+                    <p className={`font-semibold ${brand.trafficData.threats > 0 ? 'text-red-500 dark:text-red-400' : 'text-green-500 dark:text-green-400'}`}>
+                      {brand.trafficData.threats > 0 ? `${brand.trafficData.threats} threats blocked` : 'Secure'}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center text-sm text-gray-500 dark:text-gray-400 py-2">
+                  Analytics data unavailable
+                </div>
+              )}
+
+              {/* Languages */}
+              <div className="flex flex-wrap gap-2">
+                {brand.languages.map((lang) => (
+                  <Link
+                    key={lang}
+                    to={`/brands/${brand.id}/${lang}`}
+                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300"
+                  >
+                    {lang.toUpperCase()}
+                  </Link>
+                ))}
               </div>
             </div>
 
-            {/* Traffic Data */}
-            {brand.trafficData ? (
-              <div className="grid grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-sm">
-                <div>
-                  <p className="text-gray-500 dark:text-gray-400">24h Views</p>
-                  <p className="font-semibold text-gray-700 dark:text-gray-100">{brand.trafficData.traffic24h || '-'}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500 dark:text-gray-400">30d Requests</p>
-                  <p className="font-semibold text-gray-700 dark:text-gray-100">{brand.trafficData.requests30d || '-'}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500 dark:text-gray-400">Bandwidth</p>
-                  <p className="font-semibold text-gray-700 dark:text-gray-100">{brand.trafficData.bandwidth || '-'}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500 dark:text-gray-400">Security</p>
-                  <p className={`font-semibold ${brand.trafficData.threats > 0 ? 'text-red-500 dark:text-red-400' : 'text-green-500 dark:text-green-400'}`}>
-                    {brand.trafficData.threats > 0 ? `${brand.trafficData.threats} threats blocked` : 'Secure'}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center text-sm text-gray-500 dark:text-gray-400 py-2">
-                Analytics data unavailable
-              </div>
-            )}
-
-            {/* Languages */}
-            <div className="flex flex-wrap gap-2 mt-4">
-              {brand.languages.map((lang) => (
-                <Link
-                  key={lang}
-                  to={`/brands/${brand.id}/${lang}`}
-                  className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300"
-                >
-                  {lang.toUpperCase()}
-                </Link>
-              ))}
-            </div>
-
-            {/* CTA Button pinned to bottom */}
-            <div className="mt-4 flex justify-end">
+            {/* CTA Button - now will stick to bottom */}
+            <div className="mt-4">
               <button
                 onClick={(e) => {
                   e.stopPropagation();

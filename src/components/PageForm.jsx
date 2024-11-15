@@ -566,86 +566,102 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
 
                     {/* Media Panel */}
                     <Tab.Panel className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-white">Featured Image</label>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedImageType('featured');
-                            setIsLibraryOpen(true);
-                          }}
-                          className="text-blue-600 hover:text-blue-800 mb-2"
-                        >
-                          Add from Library
-                        </button>
-                        <ImageUpload
-                          key={formData.images.featured.url}
-                          imageType="Featured Image"
-                          currentImageUrl={formData.images.featured.url}
-                          onUpload={(file) => handleImageUpload(file, 'featured')}
-                          onRemove={() => handleImageDelete('featured')}
-                          allowRemove={true}
-                        />
-                        <div className="mt-2 grid grid-cols-2 gap-4">
-                          <div>
-                            <input
-                              type="text"
-                              value={formData.images.featured.alt}
-                              onChange={(e) => handleFieldChange('images.featured.alt', e.target.value)}
-                              placeholder="ALT text for featured image"
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
-                            />
+                      <div className="space-y-4">
+                        <div className="relative">
+                          <div className="flex justify-between items-center mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-white">
+                              Featured Image
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedImageType('featured');
+                                setIsLibraryOpen(true);
+                              }}
+                              className="inline-flex items-center px-2.5 py-1.5 text-xs font-medium 
+                                text-blue-700 bg-blue-50 border border-blue-200 rounded-md 
+                                hover:bg-blue-100 dark:bg-blue-900/50 dark:text-blue-200 
+                                dark:border-blue-800 dark:hover:bg-blue-900/75 transition-colors"
+                            >
+                              Add from Library
+                            </button>
                           </div>
-                          <div>
-                            <input
-                              type="text"
-                              value={formData.images.featured.focal_point}
-                              onChange={(e) => handleFieldChange('images.featured.focal_point', e.target.value)}
-                              placeholder="Focal point (e.g., center)"
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
-                            />
+                          <ImageUpload
+                            key={formData.images.featured.url}
+                            imageType="Featured Image"
+                            currentImageUrl={formData.images.featured.url}
+                            onUpload={(file) => handleImageUpload(file, 'featured')}
+                            onRemove={() => handleImageDelete('featured')}
+                            allowRemove={true}
+                          />
+                          <div className="mt-2 grid grid-cols-2 gap-4">
+                            <div>
+                              <input
+                                type="text"
+                                value={formData.images.featured.alt}
+                                onChange={(e) => handleFieldChange('images.featured.alt', e.target.value)}
+                                placeholder="ALT text for featured image"
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
+                              />
+                            </div>
+                            <div>
+                              <input
+                                type="text"
+                                value={formData.images.featured.focal_point}
+                                onChange={(e) => handleFieldChange('images.featured.focal_point', e.target.value)}
+                                placeholder="Focal point (e.g., center)"
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
+                              />
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-white">Banner Image</label>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedImageType('banner');
-                            setIsLibraryOpen(true);
-                          }}
-                          className="text-blue-600 hover:text-blue-800 mb-2"
-                        >
-                          Add from Library
-                        </button>
-                        <ImageUpload
-                          key={formData.images.banner.url}
-                          imageType="Banner Image"
-                          currentImageUrl={formData.images.banner.url}
-                          onUpload={(file) => handleImageUpload(file, 'banner')}
-                          onRemove={() => handleImageDelete('banner')}
-                          allowRemove={true}
-                        />
-                        <div className="mt-2 grid grid-cols-2 gap-4">
-                          <div>
-                            <input
-                              type="text"
-                              value={formData.images.banner.alt}
-                              onChange={(e) => handleFieldChange('images.banner.alt', e.target.value)}
-                              placeholder="ALT text for banner image"
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
-                            />
+                        <div className="relative">
+                          <div className="flex justify-between items-center mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-white">
+                              Banner Image
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedImageType('banner');
+                                setIsLibraryOpen(true);
+                              }}
+                              className="inline-flex items-center px-2.5 py-1.5 text-xs font-medium 
+                                text-blue-700 bg-blue-50 border border-blue-200 rounded-md 
+                                hover:bg-blue-100 dark:bg-blue-900/50 dark:text-blue-200 
+                                dark:border-blue-800 dark:hover:bg-blue-900/75 transition-colors"
+                            >
+                              Add from Library
+                            </button>
                           </div>
-                          <div>
-                            <input
-                              type="text"
-                              value={formData.images.banner.focal_point}
-                              onChange={(e) => handleFieldChange('images.banner.focal_point', e.target.value)}
-                              placeholder="Focal point (e.g., center)"
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
-                            />
+                          <ImageUpload
+                            key={formData.images.banner.url}
+                            imageType="Banner Image"
+                            currentImageUrl={formData.images.banner.url}
+                            onUpload={(file) => handleImageUpload(file, 'banner')}
+                            onRemove={() => handleImageDelete('banner')}
+                            allowRemove={true}
+                          />
+                          <div className="mt-2 grid grid-cols-2 gap-4">
+                            <div>
+                              <input
+                                type="text"
+                                value={formData.images.banner.alt}
+                                onChange={(e) => handleFieldChange('images.banner.alt', e.target.value)}
+                                placeholder="ALT text for banner image"
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
+                              />
+                            </div>
+                            <div>
+                              <input
+                                type="text"
+                                value={formData.images.banner.focal_point}
+                                onChange={(e) => handleFieldChange('images.banner.focal_point', e.target.value)}
+                                placeholder="Focal point (e.g., center)"
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>

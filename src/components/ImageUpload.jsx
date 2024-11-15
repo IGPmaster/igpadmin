@@ -1,5 +1,5 @@
 // src/components/ImageUpload.jsx
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Upload, Loader2, ImagePlus, CheckCircle, AlertCircle, Trash2 } from 'lucide-react';
 
 function ImageUpload({ 
@@ -9,12 +9,21 @@ function ImageUpload({
   currentImageUrl = null,
   maxSize = 2048000,
 acceptedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'],
-  allowRemove = false // Only enable for non-essential images
+  allowRemove = false, // Only enable for non-essential images
+  resetTrigger = false
 }) {
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(currentImageUrl);
   const [error, setError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const resetUpload = () => {
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleFileSelect = async (event) => {
     const file = event.target.files?.[0];
@@ -56,7 +65,7 @@ acceptedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'],
   const handleRemove = async () => {
     try {
       await onRemove();
-      setPreviewUrl(null);
+      resetUpload();
     } catch (err) {
       setError('Failed to remove image');
       console.error('Remove error:', err);
@@ -83,6 +92,7 @@ acceptedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'],
                   Replace Image
                 </span>
                 <input
+                    ref={fileInputRef}
                     type="file"
                     className="hidden"
                     accept="image/jpeg,image/png,image/webp, image/gif, image/svg+xml"
@@ -113,6 +123,7 @@ acceptedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'],
               Click to upload {imageType}
             </span>
             <input
+              ref={fileInputRef}
               type="file"
               className="hidden"
               accept={acceptedTypes.join(',')}
