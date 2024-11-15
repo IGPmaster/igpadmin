@@ -5,6 +5,8 @@ import { config } from '../lib/config';
 import ImageUpload from './ImageUpload';
 import { Tab } from '@headlessui/react';
 import { Globe, Target, BarChart, Image, FileText, Maximize2, Minimize2 } from 'lucide-react';
+import ImageLibraryModal from './ImageLibraryModal';
+import { UnsavedChangesDialog } from './UnsavedChangesDialog';
 
 const TEMPLATE_OPTIONS = [
   { value: 'default', label: 'Default Page' },
@@ -26,6 +28,10 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
 };
   const [newCategory, setNewCategory] = useState('');
   const [newTag, setNewTag] = useState('');
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+  const [selectedImageType, setSelectedImageType] = useState(null);
+  const [isDirty, setIsDirty] = useState(false);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
 
   // Define empty form data structure
   const emptyFormData = {
@@ -239,6 +245,54 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
     }
   };
 
+  const handleLibraryImageSelect = (url) => {
+    setFormData(prev => ({
+      ...prev,
+      images: {
+        ...prev.images,
+        [selectedImageType]: {
+          ...prev.images[selectedImageType],
+          url
+        }
+      }
+    }));
+    setIsLibraryOpen(false);
+  };
+
+  const handleClose = () => {
+    if (isDirty) {
+      setShowUnsavedDialog(true);
+    } else {
+      onClose();
+    }
+  };
+
+  const handleSaveAndClose = () => {
+    handleSubmit(new Event('submit'));
+    setShowUnsavedDialog(false);
+  };
+
+  const handleDiscardAndClose = () => {
+    setShowUnsavedDialog(false);
+    onClose();
+  };
+
+  const handleFieldChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    setIsDirty(true);
+  };
+
+  const handleQuillChange = (content) => {
+    setFormData(prev => ({
+      ...prev,
+      content: { ...prev.content, main: content }
+    }));
+    setIsDirty(true);
+  };
+
   if (!isOpen) return null;
 
   // Safety check for form data
@@ -247,7 +301,8 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
   }
 
   return (
-    <div className={`fixed inset-0 bg-gray-500 bg-opacity-75 dark:bg-black dark:bg-opacity-50 transition-opacity
+    <>
+      <div className={`fixed inset-0 bg-gray-500 bg-opacity-75 dark:bg-black dark:bg-opacity-50 transition-opacity
   ${isFullScreen ? 'z-50' : ''}`}>
   <div className="fixed inset-0 z-10 overflow-y-auto">
     <div className={`flex min-h-full items-end justify-center p-4 text-center sm:items-center transition-all duration-300
@@ -272,8 +327,8 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
           </button>
           <button
             type="button"
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400"
+            onClick={handleClose}
+            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600"
           >
             ✕
           </button>
@@ -318,7 +373,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                           <input
                             type="text"
                             value={formData.title}
-                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                            onChange={(e) => handleFieldChange('title', e.target.value)}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                             required
                           />
@@ -327,7 +382,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                           <label className="block text-sm font-medium text-gray-700 dark:text-white">Template</label>
                           <select
                             value={formData.template}
-                            onChange={(e) => setFormData({ ...formData, template: e.target.value })}
+                            onChange={(e) => handleFieldChange('template', e.target.value)}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                           >
                             {TEMPLATE_OPTIONS.map(option => (
@@ -345,7 +400,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                           <input
                             type="text"
                             value={formData.slug}
-                            onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                            onChange={(e) => handleFieldChange('slug', e.target.value)}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white font-mono"
                             required
                           />
@@ -354,7 +409,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                           <label className="block text-sm font-medium text-gray-700 dark:text-white">Status</label>
                           <select
                             value={formData.status}
-                            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                            onChange={(e) => handleFieldChange('status', e.target.value)}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                           >
                             {STATUS_OPTIONS.map(option => (
@@ -372,10 +427,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                           <ReactQuill
                         theme="snow"
                         value={formData.content.main}
-                        onChange={(content) => setFormData({
-                          ...formData,
-                          content: { ...formData.content, main: content }
-                        })}
+                        onChange={handleQuillChange}
                         className="h-52 mb-20"
                         modules={{
                           toolbar: [
@@ -403,10 +455,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                         <label className="block text-sm font-medium text-gray-700 dark:text-white">Excerpt</label>
                         <textarea
                           value={formData.content.excerpt}
-                          onChange={(e) => setFormData({
-                            ...formData,
-                            content: { ...formData.content, excerpt: e.target.value }
-                          })}
+                          onChange={(e) => handleFieldChange('excerpt', e.target.value)}
                           rows={3}
                           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                         />
@@ -420,7 +469,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                             <input
                               type="text"
                               value={newCategory}
-                              onChange={(e) => setNewCategory(e.target.value)}
+                              onChange={(e) => handleFieldChange('newCategory', e.target.value)}
                               placeholder="Add category"
                               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                             />
@@ -470,7 +519,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                             <input
                               type="text"
                               value={newTag}
-                              onChange={(e) => setNewTag(e.target.value)}
+                              onChange={(e) => handleFieldChange('newTag', e.target.value)}
                               placeholder="Add tag"
                               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                             />
@@ -519,10 +568,21 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                     <Tab.Panel className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-white">Featured Image</label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedImageType('featured');
+                            setIsLibraryOpen(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-800 mb-2"
+                        >
+                          Add from Library
+                        </button>
                         <ImageUpload
+                          key={formData.images.featured.url}
                           imageType="Featured Image"
                           currentImageUrl={formData.images.featured.url}
-                          onUpload={(file) => handleImageUpload(file,'featured')}
+                          onUpload={(file) => handleImageUpload(file, 'featured')}
                           onRemove={() => handleImageDelete('featured')}
                           allowRemove={true}
                         />
@@ -531,16 +591,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                             <input
                               type="text"
                               value={formData.images.featured.alt}
-                              onChange={(e) => setFormData({
-                                ...formData,
-                                images: {
-                                  ...formData.images,
-                                  featured: {
-                                    ...formData.images.featured,
-                                    alt: e.target.value
-                                  }
-                                }
-                              })}
+                              onChange={(e) => handleFieldChange('images.featured.alt', e.target.value)}
                               placeholder="ALT text for featured image"
                               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                             />
@@ -549,16 +600,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                             <input
                               type="text"
                               value={formData.images.featured.focal_point}
-                              onChange={(e) => setFormData({
-                                ...formData,
-                                images: {
-                                  ...formData.images,
-                                  featured: {
-                                    ...formData.images.featured,
-                                    focal_point: e.target.value
-                                  }
-                                }
-                              })}
+                              onChange={(e) => handleFieldChange('images.featured.focal_point', e.target.value)}
                               placeholder="Focal point (e.g., center)"
                               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                             />
@@ -568,7 +610,18 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-white">Banner Image</label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedImageType('banner');
+                            setIsLibraryOpen(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-800 mb-2"
+                        >
+                          Add from Library
+                        </button>
                         <ImageUpload
+                          key={formData.images.banner.url}
                           imageType="Banner Image"
                           currentImageUrl={formData.images.banner.url}
                           onUpload={(file) => handleImageUpload(file, 'banner')}
@@ -580,16 +633,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                             <input
                               type="text"
                               value={formData.images.banner.alt}
-                              onChange={(e) => setFormData({
-                                ...formData,
-                                images: {
-                                  ...formData.images,
-                                  banner: {
-                                    ...formData.images.banner,
-                                    alt: e.target.value
-                                  }
-                                }
-                              })}
+                              onChange={(e) => handleFieldChange('images.banner.alt', e.target.value)}
                               placeholder="ALT text for banner image"
                               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                             />
@@ -598,16 +642,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                             <input
                               type="text"
                               value={formData.images.banner.focal_point}
-                              onChange={(e) => setFormData({
-                                ...formData,
-                                images: {
-                                  ...formData.images,
-                                  banner: {
-                                    ...formData.images.banner,
-                                    focal_point: e.target.value
-                                  }
-                                }
-                              })}
+                              onChange={(e) => handleFieldChange('images.banner.focal_point', e.target.value)}
                               placeholder="Focal point (e.g., center)"
                               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                             />
@@ -629,10 +664,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                           <input
                             type="text"
                             value={formData.meta.title}
-                            onChange={(e) => setFormData({
-                              ...formData,
-                              meta: { ...formData.meta, title: e.target.value }
-                            })}
+                            onChange={(e) => handleFieldChange('meta.title', e.target.value)}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                             maxLength={60}
                           />
@@ -647,10 +679,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                           </label>
                           <textarea
                             value={formData.meta.description}
-                            onChange={(e) => setFormData({
-                              ...formData,
-                              meta: { ...formData.meta, description: e.target.value }
-                            })}
+                            onChange={(e) => handleFieldChange('meta.description', e.target.value)}
                             rows={3}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                             maxLength={160}
@@ -662,10 +691,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                           <input
                             type="text"
                             value={formData.meta.focus_keyword}
-                            onChange={(e) => setFormData({
-                              ...formData,
-                              meta: { ...formData.meta, focus_keyword: e.target.value }
-                            })}
+                            onChange={(e) => handleFieldChange('meta.focus_keyword', e.target.value)}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                           />
                         </div>
@@ -675,10 +701,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                           <input
                             type="text"
                             value={formData.meta.canonical_url}
-                            onChange={(e) => setFormData({
-                              ...formData,
-                              meta: { ...formData.meta, canonical_url: e.target.value }
-                            })}
+                            onChange={(e) => handleFieldChange('meta.canonical_url', e.target.value)}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                           />
                         </div>
@@ -688,13 +711,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                             <label className="block text-sm font-medium text-gray-700 dark:text-white">Schema Type</label>
                             <select
                               value={formData.seo_settings.schema_type}
-                              onChange={(e) => setFormData({
-                                ...formData,
-                                seo_settings: {
-                                  ...formData.seo_settings,
-                                  schema_type: e.target.value
-                                }
-                              })}
+                              onChange={(e) => handleFieldChange('seo_settings.schema_type', e.target.value)}
                               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                             >
                               <option value="WebPage">Web Page</option>
@@ -711,13 +728,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                                 <input
                                   type="checkbox"
                                   checked={formData.seo_settings.index}
-                                  onChange={(e) => setFormData({
-                                    ...formData,
-                                    seo_settings: {
-                                      ...formData.seo_settings,
-                                      index: e.target.checked
-                                    }
-                                  })}
+                                  onChange={(e) => handleFieldChange('seo_settings.index', e.target.checked)}
                                   className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
                                 />
                                 <span className="ml-2 text-sm text-gray-700 dark:text-gray-200">Index</span>
@@ -726,13 +737,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                                 <input
                                   type="checkbox"
                                   checked={formData.seo_settings.follow}
-                                  onChange={(e) => setFormData({
-                                    ...formData,
-                                    seo_settings: {
-                                      ...formData.seo_settings,
-                                      follow: e.target.checked
-                                    }
-                                  })}
+                                  onChange={(e) => handleFieldChange('seo_settings.follow', e.target.checked)}
                                   className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
                                 />
                                 <span className="ml-2 text-sm text-gray-700 dark:text-gray-200">Follow</span>
@@ -769,6 +774,18 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
           </div>
         </div>
       </div>
-    </div>
+      <ImageLibraryModal
+        isOpen={isLibraryOpen}
+        onClose={() => setIsLibraryOpen(false)}
+        onSelectImage={handleLibraryImageSelect}
+      />
+      <UnsavedChangesDialog
+        isOpen={showUnsavedDialog}
+        onSave={handleSaveAndClose}
+        onDiscard={handleDiscardAndClose}
+        onCancel={() => setShowUnsavedDialog(false)}
+      />
+      </div>
+      </>
   );
 }

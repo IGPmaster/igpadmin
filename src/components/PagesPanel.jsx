@@ -41,7 +41,7 @@ const handleDeletePage = async (pageId) => {
 
     try {
       setDeleteInProgress(true);
-      await deletePage(pageId);
+      await deletePage(pageId, brandId, lang);
       await refreshPages(); // Refresh after delete
     } catch (err) {
       console.error('Failed to delete page:', err);

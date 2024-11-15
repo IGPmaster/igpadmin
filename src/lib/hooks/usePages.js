@@ -92,39 +92,31 @@ export function usePages(brandId, lang) {
   }, [brandId, lang, listPages]);
 
   // Delete page
- const deletePage = async (pageId) => {
-  console.log('deletePage called with:', { pageId, brandId, lang });
+  const deletePage = async (pageId, brandId, lang) => {
+    try {
+      const response = await fetch(`${WORKER_URL}/api/pages/`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          pageId,
+          brandId,
+          lang,
+        }),
+      });
 
-  try {
-    setLoading(true);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete page');
+      }
 
-    // Include brandId, lang, and pageId in the URL
-    const deleteUrl = `${WORKER_URL}/api/pages/${pageId}?brandId=${brandId}&lang=${lang}`;
-
-    console.log('Sending DELETE request to:', deleteUrl);
-
-    const response = await fetch(deleteUrl, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' }
-    });
-
-    console.log('Delete response status:', response.status);
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Delete response error:', errorData);
-      throw new Error(JSON.stringify(errorData));
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to delete page:', error);
+      throw error;
     }
-
-    console.log('Delete successful, refreshing pages');
-    await refreshPages();
-  } catch (err) {
-    console.error('Delete error in usePages:', err);
-    throw err;
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   // Handle image uploads
   const uploadPageImages = useCallback(async (images) => {

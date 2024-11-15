@@ -128,34 +128,34 @@ export const PromotionsPanel = ({ brandId, lang, setShowPromotionForm, setEditin
                         </td>
                       </tr>
                     ) : (
-                      promotions.map((promotion) => (
-                        <tr key={promotion.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200">
+                      promotions.filter(Boolean).map((promotion) => (
+                        <tr key={promotion?.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200">
                           <td className="whitespace-nowrap px-3 py-4">
                             <div 
                               className="whitespace-nowrap px-3 py-4 text-base text-blue-800 dark:text-blue-400 ml-2 font-medium cursor-pointer hover:underline" 
                               onClick={() => handleEditPromotion(promotion)}
                             >
-                              {promotion.title}
+                              {promotion?.title}
                             </div>
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
-                            {promotion.slug}
+                            {promotion?.slug}
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm">
                             <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
-                              promotion.status === 'active' 
+                              promotion?.status === 'active' 
                                 ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100'
-                                : promotion.status === 'draft'
+                                : promotion?.status === 'draft'
                                 ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100'
-                                : promotion.status === 'scheduled'
+                                : promotion?.status === 'scheduled'
                                 ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-100'
                                 : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-100'
                             } transition-colors duration-200`}>
-                              {promotion.status.charAt(0).toUpperCase() + promotion.status.slice(1)}
+                              {promotion?.status.charAt(0).toUpperCase() + promotion?.status.slice(1)}
                             </span>
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
-                            {new Date(promotion.meta?.updated_at || promotion.updated_at).toLocaleDateString()}
+                            {new Date(promotion?.meta?.updated_at || promotion?.updated_at).toLocaleDateString()}
                           </td>
                           <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                             <button
