@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePages } from '../lib/hooks/usePages';
 import { Loader2, FileText, Layout } from 'lucide-react';
 
@@ -12,7 +12,7 @@ export const PagesPanel = ({ content, lang, setShowPageForm, setEditingPage }) =
     refreshPages          // Our refresh function
   } = usePages(brandId, lang);
 
-  const [deleteInProgress, setDeleteInProgress] = useState({});  // Change to object to track by ID
+   const [deleteInProgress, setDeleteInProgress] = useState(false);
 
   // Function to handle editing a page
   const handleEditPage = (page) => {
@@ -32,31 +32,28 @@ export const PagesPanel = ({ content, lang, setShowPageForm, setEditingPage }) =
   };
 
   // Function to handle deleting a page
-  const handleDeletePage = async (pageId) => {
-  if (!window.confirm('Are you sure you want to delete this page?')) {
-    return;
-  }
+const handleDeletePage = async (pageId) => {
+    console.log('Delete clicked for page:', pageId); // Debug log
+    
+    if (!window.confirm('Are you sure you want to delete this page?')) {
+      return;
+    }
 
-  try {
-    setDeleteInProgress(prev => ({ ...prev, [pageId]: true }));
-    
-    console.log('Deleting page:', pageId, brandId, lang); // Debug log
-    
-    await deletePage(pageId);
-    await refreshPages(); // Refresh after successful deletion
-    
-  } catch (error) {
-    console.error('Delete error details:', {
-      pageId,
-      brandId,
-      lang,
-      error
-    });
-    alert('Failed to delete page. Please try again.');
-  } finally {
-    setDeleteInProgress(prev => ({ ...prev, [pageId]: false }));
-  }
-};
+    try {
+      setDeleteInProgress(true);
+      await deletePage(pageId);
+      await refreshPages(); // Refresh after delete
+    } catch (err) {
+      console.error('Failed to delete page:', err);
+      alert('Failed to delete page. Please try again.');
+    } finally {
+      setDeleteInProgress(false); // Make sure this runs
+    }
+  };
+
+ useEffect(() => {
+    console.log('Delete in progress:', deleteInProgress);
+  }, [deleteInProgress]);
 
   // Function to determine the correct icon for the template
   const getTemplateIcon = (template) => {
@@ -191,14 +188,17 @@ export const PagesPanel = ({ content, lang, setShowPageForm, setEditingPage }) =
                             {new Date(page.updated_at).toLocaleDateString()}
                           </td>
                           <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                            <button
-                              type="button"
-                              className="text-red-700 bg-red-50 border border-red-700 dark:text-red-400 dark:bg-red-900/50 dark:border-red-500 hover:bg-red-800 hover:text-white dark:hover:bg-red-800 dark:hover:text-white px-3 py-1 rounded-md transition-colors duration-200"
-                              disabled={deleteInProgress[page.id]}
-                              onClick={() => handleDeletePage(page.id)}
-                            >
-                              {deleteInProgress[page.id] ? 'Deleting...' : 'Delete'}
-                            </button>
+                         <button
+        type="button"
+        onClick={() => {
+          console.log('Delete button clicked'); // Debug log
+          handleDeletePage(page.id);
+        }}
+        disabled={deleteInProgress}
+        className="text-red-700 bg-red-50 border border-red-700 dark:text-red-400 dark:bg-red-900/50 dark:border-red-500 hover:bg-red-800 hover:text-white dark:hover:bg-red-800 dark:hover:text-white px-3 py-1 rounded-md transition-colors duration-200"
+      >
+        {deleteInProgress ? 'Deleting...' : 'Delete'}
+      </button>
                           </td>
                         </tr>
                       ))

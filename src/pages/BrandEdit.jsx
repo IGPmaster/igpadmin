@@ -91,20 +91,9 @@ export function BrandEdit() {
   const [pendingLanguageSwitch, setPendingLanguageSwitch] = useState(null);
   const [promotionsRefreshTrigger, setPromotionsRefreshTrigger] = useState(0);
   const [loadingLanguages, setLoadingLanguages] = useState(true);
-
-  const refreshContent = async () => {
-  try {
-    const updatedContent = await getBrandContent(brandId, lang);
-    setLocalContent(updatedContent);
-    setContent(updatedContent);
-    setIsDirty(false);
-    // Trigger promotions refresh
-    setPromotionsRefreshTrigger(prev => prev + 1);
-  } catch (error) {
-    console.error('Failed to refresh content:', error);
-  }
-};
-
+  const [currentTab, setCurrentTab] = useState(0);
+  const [forceRefresh, setForceRefresh] = useState(0);
+  const [forceRefreshPages, setForceRefreshPages] = useState(0);
 
   const showNotification = (message, type = 'info') => {
     setNotification({ message, type });
@@ -439,7 +428,7 @@ return (
     </div>
       <div className="bg-white shadow sm:rounded-lg dark:bg-gray-800">
         <div className="px-4 py-5 sm:p-6 space-y-6">
-        <Tab.Group>
+        <Tab.Group selectedIndex={currentTab} onChange={setCurrentTab}>
           <Tab.List className="flex space-x-1 border-b border-gray-900 pb-2">
             <Tab 
               className={({ selected }) =>
@@ -1030,80 +1019,84 @@ return (
       </Tab.Panel>
       <Tab.Panel>
         <div className="bg-white shadow sm:rounded-lg dark:bg-gray-800">
-          <div className="px-4 py-5 sm:p-6">
-            <PromotionsPanel 
-  brandId={brandId}
-  lang={lang}
-  setShowPromotionForm={setShowPromotionForm}
-  setEditingPromotion={setEditingPromotion}
-  refreshTrigger={promotionsRefreshTrigger} // Add this
-/>
-          </div>
+        <div className="px-4 py-5 sm:p-6">
+          <PromotionsPanel 
+            key={forceRefresh}
+            brandId={brandId}
+            lang={lang}
+            setShowPromotionForm={setShowPromotionForm}
+            setEditingPromotion={setEditingPromotion}
+          />
         </div>
+      </div>
         </Tab.Panel>
         <Tab.Panel>
           <PagesPanel 
+            key={forceRefreshPages}
             content={content}
             lang={lang}
             setShowPageForm={setShowPageForm}
             setEditingPage={setEditingPage}
+            forceRefresh={setForceRefreshPages}
           />
         </Tab.Panel>
           </Tab.Panels>
         </Tab.Group>
         {/* Form Modals - keep these outside Tab.Panels */}
-        {/* Form Modals - keep these outside Tab.Panels */}
-          {showPromotionForm && (
-            <PromotionForm
-              key={`promotion-${editingPromotion?.id || 'new'}`}
-              isOpen={showPromotionForm}
-              onClose={() => {
-                setShowPromotionForm(false);
-                setEditingPromotion(null);
-              }}
-              promotion={editingPromotion}
-              brandId={brandId}
-              lang={lang}
-              onSave={refreshContent}
-            />
-          )}
+        {showPromotionForm && (
+          <PromotionForm
+            key={`promotion-${editingPromotion?.id || 'new'}`}
+            isOpen={showPromotionForm}
+            onClose={() => {
+              setShowPromotionForm(false);
+              setEditingPromotion(null);
+            }}
+            promotion={editingPromotion}
+            brandId={brandId}
+            lang={lang}
+            onSave={() => {
+              setPromotionsRefreshTrigger(prev => prev + 1); // Just trigger a refresh
+              return Promise.resolve();
+            }}
+          />
+        )}
 
-            {showPageForm && (
-              <PageForm
-                isOpen={showPageForm}
-                onClose={() => {
-                  setShowPageForm(false);
-                  setEditingPage(null);
-                }}
-                page={editingPage}
-                brandId={brandId}
-                lang={lang}
-                onSave={refreshContent}  // Add this line
-              />
-            )}
+                    {showPageForm && (
+          <PageForm
+            isOpen={showPageForm}
+            onClose={() => {
+              setShowPageForm(false);
+              setEditingPage(null);
+              setForceRefreshPages(prev => prev + 1); // Add this to force PagesPanel to remount
+            }}
+            page={editingPage}
+            brandId={brandId}
+            lang={lang}
+            onSave={async () => {
+              setForceRefreshPages(prev => prev + 1); // Also trigger here for redundancy
+              return Promise.resolve();
+            }}
+          />
+)}
           {/* Save Button Section */}
           <div className="mt-6 flex justify-end space-x-3">
-            {isDirty && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLocalContent(content);
-                    setIsDirty(false);
-                  }}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                >
-                  Discard Changes
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
-                >
-                  {saving ? 'Saving...' : 'Save Changes'}
-                </button>
-              </>
+            {showPromotionForm && (
+              <PromotionForm
+                key={`promotion-${editingPromotion?.id || 'new'}`}
+                isOpen={showPromotionForm}
+                onClose={() => {
+                  setShowPromotionForm(false);
+                  setEditingPromotion(null);
+                  setForceRefresh(prev => prev + 1); // Add this to force PromotionsPanel to remount
+                }}
+                promotion={editingPromotion}
+                brandId={brandId}
+                lang={lang}
+                onSave={async () => {
+                  setForceRefresh(prev => prev + 1); // Also trigger here for redundancy
+                  return Promise.resolve();
+                }}
+              />
             )}
           </div>
         </div>

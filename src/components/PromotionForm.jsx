@@ -10,6 +10,7 @@ import ImageLibraryModal from './ImageLibraryModal'; // Adjust the path if neede
 
 
 export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang, onSave }) {
+
   // 1. First define the data structure (not inside a hook)
   const emptyFormData = {
     title: '',
@@ -57,7 +58,10 @@ export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang
     }
   };
 
+
   // 2. All useState hooks together
+  const [isDirty, setIsDirty] = useState(false);  // Add this
+  const [saving, setSaving] = useState(false);     // Add this
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [formData, setFormData] = useState(emptyFormData);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
@@ -111,8 +115,31 @@ export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang
     setIsFullScreen(!isFullScreen);
   };
 
-  // Handle image upload
-  const handleImageUpload = async (file, type) => {
+  // When any field changes, mark as dirty
+  const handleFieldChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    setIsDirty(true);  // Mark as dirty when changes occur
+  };
+
+  // For nested fields (like in content or meta sections)
+const handleNestedFieldChange = (section, field, value) => {
+  console.log('Nested field changed:', section, field, value); // Debug log
+  setFormData(prev => ({
+    ...prev,
+    [section]: {
+      ...prev[section],
+      [field]: value
+    }
+  }));
+  setIsDirty(true);  // Explicitly set isDirty
+};
+
+ // Handle image upload
+const handleImageUpload = async (file, type) => {
+  try {  // Main try-catch block
     const uploadData = new FormData();
     uploadData.append('file', file);
     uploadData.append('metadata', JSON.stringify({
@@ -121,36 +148,51 @@ export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang
       language: lang,
     }));
 
-    try {
-      const response = await fetch('https://casino-content-admin.tech1960.workers.dev/upload', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${config.CF_IMAGES_TOKEN}`,
-        },
-        body: uploadData,
-      });
+    const response = await fetch('https://casino-content-admin.tech1960.workers.dev/upload', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${config.CF_IMAGES_TOKEN}`,
+      },
+      body: uploadData,
+    });
 
-      if (!response.ok) throw new Error('Failed to upload image');
+    if (!response.ok) throw new Error('Failed to upload image');
 
-      const data = await response.json();
-      if (data.success) {
-        const imageUrl = `https://imagedelivery.net/${config.CF_ACCOUNT_HASH}/${data.result.id}/public`;
+    const data = await response.json();
+    if (data.success) {
+      const imageUrl = `https://imagedelivery.net/${config.CF_ACCOUNT_HASH}/${data.result.id}/public`;
 
-        setFormData(prev => ({
-          ...prev,
-          images: {
-            ...prev.images,
-            [type]: {
-              ...prev.images[type],
-              url: imageUrl
-            }
+      setFormData(prev => ({
+        ...prev,
+        images: {
+          ...prev.images,
+          [type]: {
+            ...prev.images[type],
+            url: imageUrl
           }
-        }));
-      }
-    } catch (error) {
-      console.error('Upload error:', error);
+        }
+      }));
+      setIsDirty(true);  // Add this to mark form as dirty after upload
     }
-  };
+  } catch (error) {
+    console.error('Upload error:', error);
+  }
+};
+
+// For image alt text changes
+const handleImageAltChange = (type, alt) => {
+  setFormData(prev => ({
+    ...prev,
+    images: {
+      ...prev.images,
+      [type]: {
+        ...prev.images[type],
+        alt
+      }
+    }
+  }));
+  setIsDirty(true);  // Explicitly set isDirty
+};
 
   // Handle image delete
   const handleImageDelete = (type) => {
@@ -164,12 +206,12 @@ export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang
         }
       }
     }));
+    setIsDirty(true);  // Add this
   };
 
-// In PromotionForm.jsx
-const handleSubmit = async (e) => {
-  e.preventDefault();
+const handleSave = async () => {
   try {
+    setSaving(true);
     const promoId = promotion?.id || crypto.randomUUID();
     const key = `promo:${brandId}:${lang}:${promoId}`;
 
@@ -194,20 +236,16 @@ const handleSubmit = async (e) => {
     });
 
     if (!response.ok) throw new Error('Failed to save promotion');
-
-    // Add these lines - Call onSave before closing
+    
     if (onSave) {
-      await onSave();  // This will trigger the refresh in BrandEdit
+      await onSave(); // Call onSave to trigger refresh
     }
-    
-    // Show success notification if you have one
-    showNotification?.('Promotion saved successfully', 'success');
-    
-    onClose();  // Close the modal only after everything is done
+    setIsDirty(false);
+    onClose();
   } catch (error) {
     console.error('Failed to save promotion:', error);
-    // Show error notification if you have one
-    showNotification?.('Failed to save promotion', 'error');
+  } finally {
+    setSaving(false);
   }
 };
 
@@ -219,14 +257,12 @@ const handleSubmit = async (e) => {
 
   return (
   <div className={`fixed inset-0 bg-gray-500 bg-opacity-75 dark:bg-black dark:bg-opacity-50 transition-opacity
-      ${isFullScreen ? 'z-50' : ''}`}>
-      <div className="fixed inset-0 z-10 overflow-y-auto">
-        <div className={`flex min-h-full items-end justify-center p-4 text-center sm:items-center transition-all duration-300
-          ${isFullScreen ? 'p-0' : 'sm:p-0'}`}>
-          <div className={`relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 px-4 pb-4 pt-5 text-left shadow-xl transition-all
-            ${isFullScreen 
-              ? 'w-full h-screen max-w-none rounded-none' 
-              : 'sm:my-8 sm:w-full sm:max-w-5xl sm:p-6'}`}>
+    ${isFullScreen ? 'z-50' : ''}`}>
+    <div className="fixed inset-0 z-10 overflow-y-auto">
+      <div className={`flex min-h-full items-end justify-center p-4 text-center sm:items-center transition-all duration-300
+        ${isFullScreen ? 'p-0' : 'sm:p-0'}`}>
+        <div className={`relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 px-4 pb-4 pt-5 text-left shadow-xl transition-all
+          ${isFullScreen ? 'w-full h-screen max-w-none rounded-none' : 'sm:my-8 sm:w-full sm:max-w-5xl sm:p-6'}`}>
             
             {/* Header with close and fullscreen buttons */}
             <div className="absolute right-4 top-4 flex items-center space-x-2">
@@ -254,7 +290,7 @@ const handleSubmit = async (e) => {
               {promotion ? `Edit Promotion: ${promotion.title}` : 'New Promotion'}
             </h3>
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSave}>
               <div className={`${isFullScreen ? 'h-[calc(100vh-180px)]' : 'min-h-[600px]'}`}>
                 <div className={`${isFullScreen ? 'h-full' : 'min-h-[700px]'}`}>
               <Tab.Group>
@@ -326,7 +362,7 @@ const handleSubmit = async (e) => {
                       <input
                         type="text"
                         value={formData.title}
-                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        onChange={(e) => handleFieldChange('title', e.target.value)}
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-white"
                         required
                       />
@@ -798,23 +834,41 @@ const handleSubmit = async (e) => {
               </div>
 
               {/* Footer with submit buttons */}
-              <div className={`flex justify-end space-x-3 pt-4 border-t dark:border-gray-900
-                ${isFullScreen ? 'fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 p-4' : 'mt-6'}`}>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  {promotion ? 'Update' : 'Create'}
-                </button>
-              </div>
-              {/* Image Library Modal */}
+
+              {/* Add this footer with buttons */}
+          <div className={`flex justify-end space-x-3 pt-4 border-t dark:border-gray-900
+            ${isFullScreen ? 'fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 p-4' : 'mt-6'}`}>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600"
+            >
+              Cancel
+            </button>
+            {isDirty && (
+  <>
+    <button
+      type="button"
+      onClick={() => {
+        setFormData(promotion || emptyFormData);
+        setIsDirty(false);
+      }}
+      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+    >
+      Discard Changes
+    </button>
+    <button
+      type="button"
+      onClick={handleSave}
+      disabled={saving}
+      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700"
+    >
+      {saving ? 'Saving...' : 'Save Changes'}
+    </button>
+  </>
+)}
+          </div>
+          {/* Image Library Modal */}
                 <ImageLibraryModal
                   isOpen={isLibraryOpen}
                   onClose={() => setIsLibraryOpen(false)}
@@ -831,7 +885,7 @@ const handleSubmit = async (e) => {
                     }));
                     setIsLibraryOpen(false);
                   }}
-                />
+                />             
             </form>
           </div>
         </div>
