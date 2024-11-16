@@ -138,22 +138,27 @@ if (error) return (
             <div className="flex-1 space-y-4">
               <div className="flex justify-between items-center">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{brand.name}</h3>
+                  <h3 onClick={(e) => { e.stopPropagation(); const defaultLang = brand.languages[0]; if (defaultLang) navigate(`/brands/${brand.id}/${defaultLang}`); }} 
+                    className="text-lg font-semibold text-gray-800 dark:text-gray-100 cursor-pointer">{brand.name}</h3>
                   <span className="mt-1 text-xs font-mono bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded">
                     ID: {brand.whitelabel_id}
                   </span>
                 </div>
-                <div>
+                
+                <div className='dark:bg-gray-700 px-2 py-1 rounded-lg dark:border-gray-100'>
+                  
                   {brand.brand_info?.logo ? (
-                    <img 
+                    <img  onClick={(e) => { e.stopPropagation(); const defaultLang = brand.languages[0]; if (defaultLang) navigate(`/brands/${brand.id}/${defaultLang}`); }}
                       src={brand.brand_info.logo} 
                       alt={brand.brand_info.logo_alt || `${brand.name} logo`}
-                      className="h-12 object-contain max-w-[100px]" 
+                      className="h-12 object-contain max-w-[100px] cursor-pointer" 
                     />
                   ) : (
                     <p className="text-gray-400 dark:text-gray-500 text-xs">No logo available</p>
                   )}
+                  
                 </div>
+              
               </div>
 
               {/* Traffic Data */}

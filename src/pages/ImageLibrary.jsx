@@ -163,7 +163,7 @@ export default function ImageLibrary() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredImages.map((image) => (
             <div key={image.id} className="border rounded-lg overflow-hidden bg-white shadow dark:bg-gray-800 dark:border-gray-700">
-              <div className="relative group">
+              <div className="relative group bg-black">
                 <img 
                   src={image.url} 
                   alt={image.filename} 

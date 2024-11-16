@@ -475,7 +475,7 @@ return (
           <div className="mt-4 max-w-md space-y-4">
             <div>
               <div className="flex justify-between items-center mb-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">Brand Logo</label>
+                <label className="block text-xs  font-medium text-gray-700 dark:text-gray-400">For website use - we prefer SVG's</label>
                 <button
                   type="button"
                   onClick={() => {
