@@ -7,6 +7,7 @@ import { Tab } from '@headlessui/react';
 import { Globe, Target, BarChart, Image, FileText, Maximize2, Minimize2 } from 'lucide-react';
 import ImageLibraryModal from './ImageLibraryModal';
 import { UnsavedChangesDialog } from './UnsavedChangesDialog';
+import { LanguageSelector } from './LanguageSelector';
 
 const TEMPLATE_OPTIONS = [
   { value: 'default', label: 'Default Page' },
@@ -32,6 +33,9 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
   const [selectedImageType, setSelectedImageType] = useState(null);
   const [isDirty, setIsDirty] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [availableLangs, setAvailableLangs] = useState([]);
+  const [selectedLanguages, setSelectedLanguages] = useState([lang]);
+  const [isLoadingLanguages, setIsLoadingLanguages] = useState(true);
 
   // Define empty form data structure
   const emptyFormData = {
@@ -212,33 +216,39 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
     e.preventDefault();
     try {
       const pageId = page?.id || crypto.randomUUID();
-      const key = `page:${brandId}:${lang}:${pageId}`;
 
-      const pageData = {
-        ...formData,
-        id: pageId,
-        brand_id: brandId,
-        language: lang,
-        created_at: page?.created_at || new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
+      // Save the page for each selected language
+      await Promise.all(selectedLanguages.map(async (language) => {
+        const key = `page:${brandId}:${language}:${pageId}`;
 
-      const requestBody = {
-        brandId,
-        lang,
-        key,
-        value: pageData,
-      };
+        const pageData = {
+          ...formData,
+          id: pageId,
+          brand_id: brandId,
+          language,
+          languages: selectedLanguages, // Store which languages this page is available in
+          created_at: page?.created_at || new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
 
-      const response = await fetch(`https://casino-pages-api.tech1960.workers.dev/api/pages/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
+        const requestBody = {
+          brandId,
+          lang: language,
+          key,
+          value: pageData,
+        };
 
-      if (!response.ok) throw new Error('Failed to save page');
+        const response = await fetch(`https://casino-pages-api.tech1960.workers.dev/api/pages/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) throw new Error(`Failed to save page for language: ${language}`);
+      }));
+
       onClose();
     } catch (error) {
       console.error('Failed to save page:', error);
@@ -292,6 +302,30 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
     }));
     setIsDirty(true);
   };
+
+  useEffect(() => {
+    const fetchLanguages = async () => {
+      try {
+        setIsLoadingLanguages(true);
+        const response = await fetch(`https://worker-casino-brands.tech1960.workers.dev/list/${brandId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setAvailableLangs(data.languages || []);
+          
+          // If editing existing page, set its languages
+          if (page?.languages) {
+            setSelectedLanguages(page.languages);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching languages:', error);
+      } finally {
+        setIsLoadingLanguages(false);
+      }
+    };
+
+    fetchLanguages();
+  }, [brandId, page]);
 
   if (!isOpen) return null;
 
@@ -560,6 +594,45 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                               </span>
                             ))}
                           </div>
+                        </div>
+                      </div>
+                      <div className="mt-4">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-white">
+                          Language Availability
+                        </label>
+                        <div className="mt-2">
+                          <div className="flex flex-wrap gap-2">
+                            {isLoadingLanguages ? (
+                              <div className="text-sm text-gray-500">Loading languages...</div>
+                            ) : (
+                              availableLangs.map((language) => (
+                                <label
+                                  key={language}
+                                  className="inline-flex items-center space-x-2 p-2 border rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedLanguages.includes(language)}
+                                    onChange={(e) => {
+                                      setSelectedLanguages(prev =>
+                                        e.target.checked
+                                          ? [...prev, language]
+                                          : prev.filter(lang => lang !== language)
+                                      );
+                                      setIsDirty(true);
+                                    }}
+                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                  />
+                                  <span className="text-sm text-gray-700 dark:text-gray-200">
+                                    {language}
+                                  </span>
+                                </label>
+                              ))
+                            )}
+                          </div>
+                          <p className="mt-1 text-sm text-gray-500">
+                            Select which languages this page should be available in
+                          </p>
                         </div>
                       </div>
                     </Tab.Panel>

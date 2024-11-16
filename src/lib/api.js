@@ -4,42 +4,126 @@ import { config } from './config';
 
 const WORKER_URL = 'https://casino-content-admin.tech1960.workers.dev';
 
-export async function getBrandContent(brandId, lang) {
+// Simplified fetch helper without problematic headers
+const fetchWithTimeout = async (url, options, timeout = 5000) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+
   try {
-    const response = await fetch(`${WORKER_URL}/kv?key=brand:${brandId}:${lang}`, {
-      method: 'GET'
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    clearTimeout(id);
+    return response;
+  } catch (error) {
+    clearTimeout(id);
+    throw error;
+  }
+};
+
+export async function getBrandContent(brandId, lang) {
+  if (!brandId || !lang) {
+    console.error('Missing required parameters:', { brandId, lang });
+    throw new Error('Brand ID and language are required');
+  }
+
+  const url = `${WORKER_URL}/kv?key=brand:${brandId}:${lang}`;
+
+  try {
+    const response = await fetchWithTimeout(url, {
+      method: 'GET',
     });
     
-    if (!response.ok) throw new Error('Failed to fetch content');
-    return await response.json();
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Server response error:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText
+      });
+      throw new Error(`Server returned ${response.status}: ${errorText}`);
+    }
+    
+    const content = await response.json();
+    
+    // Normalize content structure
+    const normalizedContent = {
+      ...content,
+      acf: {
+        ...content.acf,
+        image_full: content.acf?.image_full || '',
+        image_small: content.acf?.image_small || '',
+        image_full_alt: content.acf?.image_full_alt || '',
+        image_small_alt: content.acf?.image_small_alt || '',
+        language: lang
+      }
+    };
+
+    return normalizedContent;
+
   } catch (error) {
-    console.error('Error fetching brand content:', error);
+    console.error('Error fetching brand content:', {
+      url,
+      brandId,
+      lang,
+      error: error.message
+    });
     throw error;
   }
 }
 
 export async function saveBrandContent(brandId, lang, content) {
+  if (!brandId || !lang || !content) {
+    throw new Error('Brand ID, language and content are required');
+  }
+
+  const url = `${WORKER_URL}/kv`;
+
   try {
-    const response = await fetch(`${WORKER_URL}/kv`, {
+    const contentToSave = {
+      ...content,
+      acf: {
+        ...content.acf,
+        image_full: content.acf?.image_full || '',
+        image_small: content.acf?.image_small || '',
+        image_full_alt: content.acf?.image_full_alt || '',
+        image_small_alt: content.acf?.image_small_alt || '',
+        language: lang
+      }
+    };
+
+    const response = await fetchWithTimeout(url, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
         key: `brand:${brandId}:${lang}`,
-        value: content
+        value: contentToSave
       })
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to save content');
+      const errorData = await response.text();
+      throw new Error(`Failed to save content: ${errorData}`);
     }
 
     const result = await response.json();
-    if (!result.success) throw new Error('Save operation failed');
+    
+    if (!result.success) {
+      throw new Error('Save operation was not successful');
+    }
 
-    return true;
+    return contentToSave;
+
   } catch (error) {
-    console.error('Error saving brand content:', error);
+    console.error('Error saving brand content:', {
+      url,
+      brandId,
+      lang,
+      error: error.message
+    });
     throw error;
   }
 }
@@ -139,32 +223,27 @@ export async function getAllBrands() {
   }
 }
 
-export async function updateBrandLogo(brandId, logoUrl, logoAlt = '') {
+export async function updateBrandLogo(brandId, logoUrl, logoAlt) {
   try {
-    const response = await fetch(`${WORKER_URL}/kv/list`, {
-      method: 'GET'
-    });
+    // Get all available languages for this brand
+    const response = await fetch(`https://worker-casino-brands.tech1960.workers.dev/list/${brandId}`);
+    const { languages } = await response.json();
 
-    if (!response.ok) throw new Error('Failed to fetch brand languages');
-    
-    const data = await response.json();
-    const brandLanguages = data
-      .filter(item => item.name.startsWith(`brand:${brandId}:`))
-      .map(item => item.name.split(':')[2]);
-
-    await Promise.all(brandLanguages.map(async (lang) => {
+    // Update logo for each language
+    for (const lang of languages) {
       const content = await getBrandContent(brandId, lang);
-      if (content) {
-        await saveBrandContent(brandId, lang, {
-          ...content,
-          brand_info: {
-            ...content.brand_info,
-            logo: logoUrl,
-            logo_alt: logoAlt
-          }
-        });
-      }
-    }));
+      
+      const updatedContent = {
+        ...content,
+        brand_info: {
+          ...content.brand_info,
+          logo: logoUrl,
+          logo_alt: logoAlt
+        }
+      };
+
+      await saveBrandContent(brandId, lang, updatedContent);
+    }
 
     return true;
   } catch (error) {

@@ -4,7 +4,7 @@ import 'react-quill/dist/quill.snow.css';
 import { useBrandContent } from '../lib/hooks/useBrandContent';
 import { getBrandContent, saveBrandContent, updateBrandLogo } from '../lib/api';
 import { config } from '../lib/config';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import ImageUpload from '../components/ImageUpload';
 import { PromotionForm } from '../components/PromotionForm';
 import { PromotionsPanel } from '../components/PromotionsPanel';
@@ -17,6 +17,7 @@ import { LanguageSelector } from '../components/LanguageSelector';
 import { Notification } from '../components/Notification';
 import { ConfirmationDialog } from '../components/ConfirmationDialog';
 import ImageLibraryModal from '../components/ImageLibraryModal';
+import { PhotoIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 function CopyLanguageSelector({ currentLang, brandId, onCopy }) {
   const [availableLanguages, setAvailableLanguages] = useState([]);
@@ -70,6 +71,76 @@ function CopyLanguageSelector({ currentLang, brandId, onCopy }) {
   );
 }
 
+// Move BrandImage outside the main component
+const BrandImage = ({ imageUrl, type, onReplace, onDelete, lang, isLanguageChanging }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  if (isLanguageChanging) {
+    return (
+      <div className="animate-pulse bg-gray-200 h-48 w-full rounded"></div>
+    );
+  }
+
+  if (!imageUrl) {
+    return (
+      <div 
+        className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition-colors"
+        onClick={onReplace}
+      >
+        <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
+        <div className="text-gray-400 text-sm mt-2">Click to add {type} banner</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <div 
+        className="relative group"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <img 
+          src={imageUrl} 
+          alt={`${type} banner for ${lang}`}
+          className="max-w-full h-auto rounded-lg"
+          key={`${imageUrl}-${lang}`}
+        />
+        
+        {/* Language badge */}
+        <div className="absolute top-2 right-2 bg-yellow-400 text-gray-900 font-medium px-2 py-1 text-xs rounded">
+          {lang}
+        </div>
+
+        {/* Action buttons on hover */}
+        {isHovered && (
+          <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center gap-4">
+            <button
+              onClick={onReplace}
+              className="p-2 bg-blue-500 hover:bg-blue-600 rounded-full text-white transition-colors"
+              title={`Replace ${type} banner`}
+            >
+              <PhotoIcon className="h-6 w-6" />
+            </button>
+            <button
+              onClick={onDelete}
+              className="p-2 bg-red-500 hover:bg-red-600 rounded-full text-white transition-colors"
+              title={`Delete ${type} banner`}
+            >
+              <TrashIcon className="h-6 w-6" />
+            </button>
+          </div>
+        )}
+      </div>
+      
+      {/* Image URL display */}
+      <div className="text-xs text-gray-500 break-all">
+        Current URL: {imageUrl || 'None'}
+      </div>
+    </div>
+  );
+};
+
 // Main Component
 export function BrandEdit() {
   const { brandId, lang } = useParams();
@@ -97,18 +168,59 @@ export function BrandEdit() {
   const [forceRefreshPages, setForceRefreshPages] = useState(0);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [selectedImageType, setSelectedImageType] = useState(null);
+  const [isLanguageChanging, setIsLanguageChanging] = useState(false);
+  const [sharedPages, setSharedPages] = useState([]);
 
   const showNotification = (message, type = 'info') => {
     setNotification({ message, type });
     setTimeout(() => setNotification({ message: '', type: 'info' }), 3000);
   };
 
-  const handleLanguageSwitch = (newLang) => {
+  const logContentState = (content, source) => {
+    console.log(`Content State [${source}] for ${lang}:`, {
+      desktop: content?.acf?.image_full,
+      mobile: content?.acf?.image_small,
+      timestamp: new Date().toISOString()
+    });
+  };
+
+  useEffect(() => {
+    if (content && !isLanguageChanging) {
+      // Only update if the content is for the current language
+      if (content.acf?.language === lang) {
+        setLocalContent(content);
+      }
+    }
+  }, [content, isLanguageChanging, lang]);
+
+  const handleLanguageSwitch = async (newLang) => {
     if (isDirty) {
       setPendingLanguageSwitch(newLang);
       setShowConfirmDialog(true);
-    } else {
+      return;
+    }
+
+    try {
+      setIsLanguageChanging(true);
+      // Clear current content
+      setLocalContent(null);
+      
+      // Navigate to new language
       navigate(`/brands/${content.brand_info.whitelabel_id}/${newLang}`);
+      
+      // Wait for content to be fetched
+      const newContent = await getBrandContent(brandId, newLang);
+      
+      // Set new content with a small delay to ensure clean state
+      setTimeout(() => {
+        setLocalContent(newContent);
+        setIsLanguageChanging(false);
+      }, 100);
+
+    } catch (err) {
+      console.error('Error switching language:', err);
+      showNotification('Failed to switch language', 'error');
+      setIsLanguageChanging(false);
     }
   };
   
@@ -157,8 +269,32 @@ useEffect(() => {
   const handleSave = async () => {
     try {
       setSaving(true);
-      await updateContent(localContent);
+      
+      // Ensure we're saving with the correct language
+      const contentToSave = {
+        ...localContent,
+        acf: {
+          ...localContent.acf,
+          language: lang,
+          // Preserve image fields explicitly
+          image_full: localContent.acf?.image_full || '',
+          image_small: localContent.acf?.image_small || '',
+          image_full_alt: localContent.acf?.image_full_alt || '',
+          image_small_alt: localContent.acf?.image_small_alt || ''
+        }
+      };
+
+      await updateContent(contentToSave);
       setIsDirty(false);
+      
+      // Verify the save
+      const verifyContent = await getBrandContent(brandId, lang);
+      console.log('Verified content after save:', {
+        lang,
+        desktop: verifyContent.acf?.image_full,
+        mobile: verifyContent.acf?.image_small
+      });
+
     } catch (err) {
       console.error('Failed to save:', err);
     } finally {
@@ -190,30 +326,21 @@ useEffect(() => {
 
  const handleImageDelete = async (type) => {
   try {
-    if (type === 'logo') {
-      const newContent = {
-        ...localContent,
-        brand_info: {
-          ...localContent.brand_info,
-          logo: '',
-          logo_alt: ''
-        }
-      };
-      setLocalContent(newContent);
-      setIsDirty(true);
-    } else {
-      const newContent = {
-        ...localContent,
-        acf: {
-          ...localContent.acf,
-          [type === 'desktop' ? 'image_full' : 'image_small']: ''
-        }
-      };
-      setLocalContent(newContent);
-      setIsDirty(true);
-    }
-  } catch (err) {
-    console.error('Failed to delete image:', err);
+    const updatedContent = {
+      ...localContent,
+      acf: {
+        ...localContent.acf,
+        [type === 'Desktop' ? 'image_full' : 'image_small']: '',
+        [type === 'Desktop' ? 'image_full_alt' : 'image_small_alt']: ''
+      }
+    };
+
+    await saveBrandContent(brandId, lang, updatedContent);
+    setLocalContent(updatedContent);
+    showNotification(`${type} banner deleted successfully`, 'success');
+  } catch (error) {
+    console.error('Error deleting image:', error);
+    showNotification('Failed to delete image', 'error');
   }
 };
 
@@ -233,7 +360,7 @@ const handleImageUpload = async (type) => {
       formData.append('file', file);
       formData.append('metadata', JSON.stringify({
         brand: brandId,
-        type: type,
+        type: type.toLowerCase(),
         language: lang
       }));
 
@@ -253,41 +380,37 @@ const handleImageUpload = async (type) => {
         if (data.success) {
           const imageUrl = `https://imagedelivery.net/${config.CF_ACCOUNT_HASH}/${data.result.id}/public`;
 
-          if (type === 'logo') {
-            try {
-              await updateBrandLogo(brandId, imageUrl, localContent.brand_info.logo_alt);
-              const newContent = {
-                ...localContent,
-                brand_info: {
-                  ...localContent.brand_info,
-                  logo: imageUrl
-                }
-              };
-              setLocalContent(newContent);
-              setIsDirty(false);
-            } catch (err) {
-              console.error('Failed to update logo across languages:', err);
+          const newContent = {
+            ...localContent,
+            acf: {
+              ...localContent.acf,
+              [type === 'Desktop' ? 'image_full' : 'image_small']: imageUrl,
+              language: lang
             }
-          } else {
-            const newContent = {
-              ...localContent,
-              acf: {
-                ...localContent.acf,
-                [type === 'desktop' ? 'image_full' : 'image_small']: imageUrl
-              }
-            };
-            setLocalContent(newContent);
-            setIsDirty(true);
-          }
+          };
+
+          console.log(`Updating ${type} image:`, {
+            type,
+            url: imageUrl,
+            field: type === 'Desktop' ? 'image_full' : 'image_small'
+          });
+
+          setLocalContent(newContent);
+          setIsDirty(true);
+          
+          await updateContent(newContent);
+          showNotification(`${type} banner updated successfully`, 'success');
         }
       } catch (err) {
         console.error('Upload error:', err);
+        showNotification(`Failed to upload ${type} banner`, 'error');
       }
     };
 
     input.click();
   } catch (err) {
     console.error('Upload failed:', err);
+    showNotification('Upload failed', 'error');
   } finally {
     setUploading(false);
   }
@@ -299,7 +422,8 @@ const handleContentChange = (key, value) => {
     ...prev,
     acf: {
       ...prev.acf,
-      [key]: value
+      [key]: value,
+      language: lang
     }
   }));
 };
@@ -314,6 +438,40 @@ if (loading || !content || !localContent) return (
 
 if (error) return <div className="text-red-500">Error: {error}</div>;
 
+// Add this function inside the BrandEdit component
+const handlePageSharing = async (pageId, isShared) => {
+  try {
+    // Update the shared pages list in your database
+    await fetch(`https://casino-pages-api.tech1960.workers.dev/api/pages/${pageId}/sharing`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        isShared,
+        brandId,
+        languages: isShared ? availableLangs : [lang] // If shared, make available in all languages
+      })
+    });
+
+    // Update local state
+    setSharedPages(prev => 
+      isShared 
+        ? [...prev, pageId]
+        : prev.filter(id => id !== pageId)
+    );
+
+    showNotification(
+      isShared 
+        ? 'Page is now shared across all languages' 
+        : 'Page is now language-specific',
+      'success'
+    );
+  } catch (error) {
+    console.error('Failed to update page sharing:', error);
+    showNotification('Failed to update page sharing status', 'error');
+  }
+};
 
 return (
   <div className="space-y-8">
@@ -365,11 +523,27 @@ return (
                 setIsAddingLanguage(true);
                 showNotification('Adding new language...', 'info');
                 
+                // Create empty content structure instead of copying existing content
                 const newContent = {
-                  ...content,
+                  brand_info: {
+                    whitelabel_id: content.brand_info.whitelabel_id
+                  },
                   acf: {
-                    ...content.acf,
-                    geo_target_country_sel: [newLang]
+                    language: newLang,
+                    geo_target_country_sel: [newLang],
+                    image_full: '',
+                    image_small: '',
+                    casino_games_info: '',
+                    slot_games_info: '',
+                    main_content: '',
+                    promo_over: '',
+                    promo_under: '',
+                    sig_terms: '',
+                    trust_icons: '',
+                    yoast_head_json: {
+                      title: '',
+                      description: ''
+                    }
                   }
                 };
                 
@@ -580,54 +754,19 @@ return (
                   Add from Library
                 </button>
               </div>
-              <ImageUpload 
-                imageType="Desktop Banner"
-                currentImageUrl={localContent.acf.image_full}
-                onUpload={async (file) => {
-                  const formData = new FormData();
-                  formData.append('file', file);
-                  formData.append('metadata', JSON.stringify({
-                    brand: brandId,
-                    type: 'desktop',
-                    language: lang
-                  }));
-
-                  try {
-                    const response = await fetch('https://casino-content-admin.tech1960.workers.dev/upload', {
-                      method: 'POST',
-                      body: formData
-                    });
-
-                    if (!response.ok) {
-                      throw new Error(await response.text());
-                    }
-
-                    const data = await response.json();
-
-                    if (data.success) {
-                      const imageUrl = `https://imagedelivery.net/${config.CF_ACCOUNT_HASH}/${data.result.id}/public`;
-                      const newContent = {
-                        ...localContent,
-                        acf: {
-                          ...localContent.acf,
-                          image_full: imageUrl
-                        }
-                      };
-                      setLocalContent(newContent);
-                      setIsDirty(true);
-                      return true;
-                    }
-                    return false;
-                  } catch (err) {
-                    console.error('Upload error:', err);
-                    throw err;
-                  }
-                }}
+              <BrandImage 
+                key={`${lang}-desktop`}
+                imageUrl={localContent?.acf?.image_full} 
+                type="Desktop"
+                lang={lang}
+                isLanguageChanging={isLanguageChanging}
+                onReplace={() => handleImageUpload('Desktop')}
+                onDelete={() => handleImageDelete('Desktop')}
               />
             </div>
             {/* Desktop Banner ALT text */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-100 pb-">
                 Desktop Banner ALT Text
               </label>
               <input
@@ -656,54 +795,19 @@ return (
                   Add from Library
                 </button>
               </div>
-              <ImageUpload 
-                imageType="Mobile Banner"
-                currentImageUrl={localContent.acf.image_small}
-                onUpload={async (file) => {
-                  const formData = new FormData();
-                  formData.append('file', file);
-                  formData.append('metadata', JSON.stringify({
-                    brand: brandId,
-                    type: 'mobile',
-                    language: lang
-                  }));
-
-                  try {
-                    const response = await fetch('https://casino-content-admin.tech1960.workers.dev/upload', {
-                      method: 'POST',
-                      body: formData
-                    });
-
-                    if (!response.ok) {
-                      throw new Error(await response.text());
-                    }
-
-                    const data = await response.json();
-
-                    if (data.success) {
-                      const imageUrl = `https://imagedelivery.net/${config.CF_ACCOUNT_HASH}/${data.result.id}/public`;
-                      const newContent = {
-                        ...localContent,
-                        acf: {
-                          ...localContent.acf,
-                          image_small: imageUrl
-                        }
-                      };
-                      setLocalContent(newContent);
-                      setIsDirty(true);
-                      return true;
-                    }
-                    return false;
-                  } catch (err) {
-                    console.error('Upload error:', err);
-                    throw err;
-                  }
-                }}
+              <BrandImage 
+                key={`${lang}-mobile`}
+                imageUrl={localContent?.acf?.image_small} 
+                type="Mobile"
+                lang={lang}
+                isLanguageChanging={isLanguageChanging}
+                onReplace={() => handleImageUpload('Mobile')}
+                onDelete={() => handleImageDelete('Mobile')}
               />
             </div>
             {/* Mobile Banner ALT text */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-100">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-100 pb-4">
                 Mobile Banner ALT Text
               </label>
               <input
@@ -1085,6 +1189,9 @@ return (
             setShowPageForm={setShowPageForm}
             setEditingPage={setEditingPage}
             forceRefresh={setForceRefreshPages}
+            sharedPages={sharedPages}
+            onToggleSharing={handlePageSharing}
+            availableLanguages={availableLangs}
           />
         </Tab.Panel>
           </Tab.Panels>

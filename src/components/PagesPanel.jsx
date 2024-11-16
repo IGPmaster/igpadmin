@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { usePages } from '../lib/hooks/usePages';
 import { Loader2, FileText, Layout } from 'lucide-react';
 
-export const PagesPanel = ({ content, lang, setShowPageForm, setEditingPage }) => {
+export const PagesPanel = ({ content, lang, setShowPageForm, setEditingPage, sharedPages, onToggleSharing, availableLanguages }) => {
   const brandId = content?.brand_info?.whitelabel_id;
   const {
     pages,                // From React Query
