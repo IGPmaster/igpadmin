@@ -150,18 +150,41 @@ const handleDeletePage = async (pageId) => {
                                 {page.title}
                               </span>
                             </div>
-                            {page.categories?.length > 0 && (
-                              <div className="mt-1 flex gap-1">
-                                {page.categories.map((category) => (
-                                  <span 
-                                    key={category} 
-                                    className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 font-mono font-thin"
-                                  >
-                                    {category}
+                            <div className="flex items-center gap-4">
+                              {/* Categories */}
+                              {page.categories?.length > 0 && (
+                                <div className="flex gap-1">
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    Categories:
                                   </span>
-                                ))}
-                              </div>
-                            )}
+                                  {page.categories.map((category) => (
+                                    <span 
+                                      key={category} 
+                                      className="bg-yellow-100 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-yellow-300 border border-yellow-300"
+                                    >
+                                      {category}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Languages */}
+                              {page.languages?.length > 0 && (
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    Available in:
+                                  </span>
+                                  {page.languages.map((language) => (
+                                    <span 
+                                      key={language} 
+                                      className="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-green-400 border border-green-400"
+                                    >
+                                      {language}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400 capitalize">
                             {page.template}
