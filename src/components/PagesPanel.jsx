@@ -153,8 +153,8 @@ const handleDeletePage = async (pageId) => {
                             <div className="flex items-center gap-4">
                               {/* Categories */}
                               {page.categories?.length > 0 && (
-                                <div className="flex gap-1">
-                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                <div className="flex items-center gap-1 border-r border-gray-600 pr-2">
+                                  <span className="text-xs px-1 text-gray-500 dark:text-gray-400">
                                     Categories:
                                   </span>
                                   {page.categories.map((category) => (
@@ -171,7 +171,7 @@ const handleDeletePage = async (pageId) => {
                               {/* Languages */}
                               {page.languages?.length > 0 && (
                                 <div className="flex items-center gap-1">
-                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                  <span className="text-xs text-gray-500 dark:text-gray-400 px-1">
                                     Available in:
                                   </span>
                                   {page.languages.map((language) => (
