@@ -191,6 +191,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
             }
           }
         }));
+        setIsDirty(true);
       }
     } catch (error) {
       console.error('Upload error:', error);
@@ -209,6 +210,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
         }
       }
     }));
+    setIsDirty(true);
   };
 
   // Your existing handleSubmit
@@ -266,6 +268,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
         }
       }
     }));
+    setIsDirty(true);
     setIsLibraryOpen(false);
   };
 
@@ -407,7 +410,13 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                           <input
                             type="text"
                             value={formData.title}
-                            onChange={(e) => handleFieldChange('title', e.target.value)}
+                            onChange={(e) => {
+                              setFormData(prev => ({
+                                ...prev,
+                                title: e.target.value
+                              }));
+                              setIsDirty(true);
+                            }}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                             required
                           />
@@ -416,7 +425,13 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                           <label className="block text-sm font-medium text-gray-700 dark:text-white">Template</label>
                           <select
                             value={formData.template}
-                            onChange={(e) => handleFieldChange('template', e.target.value)}
+                            onChange={(e) => {
+                              setFormData(prev => ({
+                                ...prev,
+                                template: e.target.value
+                              }));
+                              setIsDirty(true);
+                            }}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                           >
                             {TEMPLATE_OPTIONS.map(option => (
@@ -443,7 +458,13 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                           <label className="block text-sm font-medium text-gray-700 dark:text-white">Status</label>
                           <select
                             value={formData.status}
-                            onChange={(e) => handleFieldChange('status', e.target.value)}
+                            onChange={(e) => {
+                              setFormData(prev => ({
+                                ...prev,
+                                status: e.target.value
+                              }));
+                              setIsDirty(true);
+                            }}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                           >
                             {STATUS_OPTIONS.map(option => (
@@ -457,12 +478,18 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-white">Main Content</label>
-                        <div className="mt-1">
+                        <div className={`mt-1`}>
                           <ReactQuill
                         theme="snow"
                         value={formData.content.main}
-                        onChange={handleQuillChange}
-                        className="h-52 mb-20"
+                        onChange={(content) => setFormData(prev => ({
+                          ...prev,
+                          content: {
+                            ...prev.content,
+                            main: content
+                          }
+                        }))}
+                        className={`${isFullScreen ? 'h-[calc(100vh-750px)]' : 'h-52 mb-20'}`}
                         modules={{
                           toolbar: [
                             ['bold', 'italic', 'underline', 'strike'],
@@ -485,17 +512,19 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                         </div>
                       </div>
 
+                      {/* Temporarily commented out Excerpt section
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-white">Excerpt</label>
                         <textarea
                           value={formData.content.excerpt}
                           onChange={(e) => handleFieldChange('excerpt', e.target.value)}
                           rows={3}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
+                          className="mt-1 font-mono block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                         />
                       </div>
+                      */}
 
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className={`grid grid-cols-2 gap-4 py-5 ${isFullScreen ? 'py-10' : ''}`}>
                         {/* Categories */}
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-white">Categories</label>
@@ -503,7 +532,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                             <input
                               type="text"
                               value={newCategory}
-                              onChange={(e) => handleFieldChange('newCategory', e.target.value)}
+                              onChange={(e) => setNewCategory(e.target.value)}
                               placeholder="Add category"
                               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                             />
@@ -511,11 +540,12 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                               type="button"
                               onClick={() => {
                                 if (newCategory.trim()) {
-                                  setFormData({
-                                    ...formData,
-                                    categories: [...formData.categories, newCategory.trim()]
-                                  });
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    categories: [...prev.categories, newCategory.trim()]
+                                  }));
                                   setNewCategory('');
+                                  setIsDirty(true);
                                 }
                               }}
                               className="mt-1 inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
@@ -533,9 +563,11 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    const newCategories = [...formData.categories];
-                                    newCategories.splice(index, 1);
-                                    setFormData({ ...formData, categories: newCategories });
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      categories: prev.categories.filter((_, i) => i !== index)
+                                    }));
+                                    setIsDirty(true);
                                   }}
                                   className="ml-1 inline-flex items-center p-0.5 text-blue-400 hover:text-blue-600 dark:text-blue-300 dark:hover:text-blue-100"
                                 >
@@ -553,7 +585,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                             <input
                               type="text"
                               value={newTag}
-                              onChange={(e) => handleFieldChange('newTag', e.target.value)}
+                              onChange={(e) => setNewTag(e.target.value)}
                               placeholder="Add tag"
                               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                             />
@@ -561,11 +593,12 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                               type="button"
                               onClick={() => {
                                 if (newTag.trim()) {
-                                  setFormData({
-                                    ...formData,
-                                    tags: [...formData.tags, newTag.trim()]
-                                  });
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    tags: [...prev.tags, newTag.trim()]
+                                  }));
                                   setNewTag('');
+                                  setIsDirty(true);
                                 }
                               }}
                               className="mt-1 inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
@@ -583,9 +616,11 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    const newTags = [...formData.tags];
-                                    newTags.splice(index, 1);
-                                    setFormData({ ...formData, tags: newTags });
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      tags: prev.tags.filter((_, i) => i !== index)
+                                    }));
+                                    setIsDirty(true);
                                   }}
                                   className="ml-1 inline-flex items-center p-0.5 text-blue-400 hover:text-blue-600 dark:text-blue-300 dark:hover:text-blue-100"
                                 >
@@ -608,7 +643,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                               availableLangs.map((language) => (
                                 <label
                                   key={language}
-                                  className="inline-flex items-center space-x-2 p-2 border rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
+                                  className="inline-flex items-center space-x-2 p-2 border border-gray-500 rounded-md cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
                                 >
                                   <input
                                     type="checkbox"
@@ -621,7 +656,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                                       );
                                       setIsDirty(true);
                                     }}
-                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 "
                                   />
                                   <span className="text-sm text-gray-700 dark:text-gray-200">
                                     {language}
@@ -672,7 +707,19 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                               <input
                                 type="text"
                                 value={formData.images.featured.alt}
-                                onChange={(e) => handleFieldChange('images.featured.alt', e.target.value)}
+                                onChange={(e) => {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    images: {
+                                      ...prev.images,
+                                      featured: {
+                                        ...prev.images.featured,
+                                        alt: e.target.value
+                                      }
+                                    }
+                                  }));
+                                  setIsDirty(true);
+                                }}
                                 placeholder="ALT text for featured image"
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                               />
@@ -681,7 +728,19 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                               <input
                                 type="text"
                                 value={formData.images.featured.focal_point}
-                                onChange={(e) => handleFieldChange('images.featured.focal_point', e.target.value)}
+                                onChange={(e) => {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    images: {
+                                      ...prev.images,
+                                      featured: {
+                                        ...prev.images.featured,
+                                        focal_point: e.target.value
+                                      }
+                                    }
+                                  }));
+                                  setIsDirty(true);
+                                }}
                                 placeholder="Focal point (e.g., center)"
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                               />
@@ -721,7 +780,19 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                               <input
                                 type="text"
                                 value={formData.images.banner.alt}
-                                onChange={(e) => handleFieldChange('images.banner.alt', e.target.value)}
+                                onChange={(e) => {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    images: {
+                                      ...prev.images,
+                                      banner: {
+                                        ...prev.images.banner,
+                                        alt: e.target.value
+                                      }
+                                    }
+                                  }));
+                                  setIsDirty(true);
+                                }}
                                 placeholder="ALT text for banner image"
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                               />
@@ -730,7 +801,19 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                               <input
                                 type="text"
                                 value={formData.images.banner.focal_point}
-                                onChange={(e) => handleFieldChange('images.banner.focal_point', e.target.value)}
+                                onChange={(e) => {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    images: {
+                                      ...prev.images,
+                                      banner: {
+                                        ...prev.images.banner,
+                                        focal_point: e.target.value
+                                      }
+                                    }
+                                  }));
+                                  setIsDirty(true);
+                                }}
                                 placeholder="Focal point (e.g., center)"
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                               />
@@ -753,7 +836,16 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                           <input
                             type="text"
                             value={formData.meta.title}
-                            onChange={(e) => handleFieldChange('meta.title', e.target.value)}
+                            onChange={(e) => {
+                              setFormData(prev => ({
+                                ...prev,
+                                meta: {
+                                  ...prev.meta,
+                                  title: e.target.value
+                                }
+                              }));
+                              setIsDirty(true);
+                            }}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                             maxLength={60}
                           />
@@ -768,7 +860,16 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                           </label>
                           <textarea
                             value={formData.meta.description}
-                            onChange={(e) => handleFieldChange('meta.description', e.target.value)}
+                            onChange={(e) => {
+                              setFormData(prev => ({
+                                ...prev,
+                                meta: {
+                                  ...prev.meta,
+                                  description: e.target.value
+                                }
+                              }));
+                              setIsDirty(true);
+                            }}
                             rows={3}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                             maxLength={160}
@@ -780,7 +881,16 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                           <input
                             type="text"
                             value={formData.meta.focus_keyword}
-                            onChange={(e) => handleFieldChange('meta.focus_keyword', e.target.value)}
+                            onChange={(e) => {
+                              setFormData(prev => ({
+                                ...prev,
+                                meta: {
+                                  ...prev.meta,
+                                  focus_keyword: e.target.value
+                                }
+                              }));
+                              setIsDirty(true);
+                            }}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                           />
                         </div>
@@ -790,7 +900,16 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                           <input
                             type="text"
                             value={formData.meta.canonical_url}
-                            onChange={(e) => handleFieldChange('meta.canonical_url', e.target.value)}
+                            onChange={(e) => {
+                              setFormData(prev => ({
+                                ...prev,
+                                meta: {
+                                  ...prev.meta,
+                                  canonical_url: e.target.value
+                                }
+                              }));
+                              setIsDirty(true);
+                            }}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                           />
                         </div>
@@ -800,7 +919,16 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                             <label className="block text-sm font-medium text-gray-700 dark:text-white">Schema Type</label>
                             <select
                               value={formData.seo_settings.schema_type}
-                              onChange={(e) => handleFieldChange('seo_settings.schema_type', e.target.value)}
+                              onChange={(e) => {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  seo_settings: {
+                                    ...prev.seo_settings,
+                                    schema_type: e.target.value
+                                  }
+                                }));
+                                setIsDirty(true);
+                              }}
                               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white"
                             >
                               <option value="WebPage">Web Page</option>
@@ -817,7 +945,16 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                                 <input
                                   type="checkbox"
                                   checked={formData.seo_settings.index}
-                                  onChange={(e) => handleFieldChange('seo_settings.index', e.target.checked)}
+                                  onChange={(e) => {
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      seo_settings: {
+                                        ...prev.seo_settings,
+                                        index: e.target.checked
+                                      }
+                                    }));
+                                    setIsDirty(true);
+                                  }}
                                   className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
                                 />
                                 <span className="ml-2 text-sm text-gray-700 dark:text-gray-200">Index</span>
@@ -826,7 +963,16 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
                                 <input
                                   type="checkbox"
                                   checked={formData.seo_settings.follow}
-                                  onChange={(e) => handleFieldChange('seo_settings.follow', e.target.checked)}
+                                  onChange={(e) => {
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      seo_settings: {
+                                        ...prev.seo_settings,
+                                        follow: e.target.checked
+                                      }
+                                    }));
+                                    setIsDirty(true);
+                                  }}
                                   className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
                                 />
                                 <span className="ml-2 text-sm text-gray-700 dark:text-gray-200">Follow</span>
@@ -841,9 +987,8 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
               </div>
 
               {/* Form Actions */}
-              {/* Form Actions */}
-                <div className={`flex justify-end space-x-3 pt-4 border-t dark:border-gray-900
-                  ${isFullScreen ? 'fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 p-4' : 'mt-6'}`}>
+                <div className={`flex justify-end space-x-3 py-1 border-t dark:border-gray-900 dark:bg-gray-900/30
+                  ${isFullScreen ? 'fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 py-4' : 'mt-6'}`}>
                 <button
                   type="button"
                   onClick={onClose}

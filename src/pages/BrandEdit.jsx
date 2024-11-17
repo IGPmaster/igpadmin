@@ -286,14 +286,6 @@ useEffect(() => {
 
       await updateContent(contentToSave);
       setIsDirty(false);
-      
-      // Verify the save
-      const verifyContent = await getBrandContent(brandId, lang);
-      console.log('Verified content after save:', {
-        lang,
-        desktop: verifyContent.acf?.image_full,
-        mobile: verifyContent.acf?.image_small
-      });
 
     } catch (err) {
       console.error('Failed to save:', err);

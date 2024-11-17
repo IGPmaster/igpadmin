@@ -445,7 +445,7 @@ const handleSave = async () => {
                               <label className="block text-sm font-medium text-gray-700 dark:text-white">Status</label>
                               <select
                                 value={formData.status}
-                                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+                                onChange={(e) => handleFieldChange('status', e.target.value)}
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-white"
                               >
                                 <option value="active">Active</option>
@@ -460,7 +460,7 @@ const handleSave = async () => {
                               <label className="block text-sm font-medium text-gray-700 dark:text-white">Type</label>
                               <select
                                 value={formData.type}
-                                onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
+                                onChange={(e) => handleFieldChange('type', e.target.value)}
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-white"
                               >
                                 <option value="regular">Regular Promotion</option>
@@ -597,15 +597,9 @@ const handleSave = async () => {
                                   <input
                                     type="text"
                                     value={formData.images.desktop.alt}
-                                    onChange={(e) => setFormData({
-                                      ...formData,
-                                      images: {
-                                        ...formData.images,
-                                        desktop: {
-                                          ...formData.images.desktop,
-                                          alt: e.target.value
-                                        }
-                                      }
+                                    onChange={(e) => handleNestedFieldChange('images', 'desktop', {
+                                      ...formData.images.desktop,
+                                      alt: e.target.value
                                     })}
                                     placeholder="ALT text for desktop banner"
                                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-white font-mono"
@@ -615,15 +609,9 @@ const handleSave = async () => {
                                   <input
                                     type="text"
                                     value={formData.images.desktop.focal_point}
-                                    onChange={(e) => setFormData({
-                                      ...formData,
-                                      images: {
-                                        ...formData.images,
-                                        desktop: {
-                                          ...formData.images.desktop,
-                                          focal_point: e.target.value
-                                        }
-                                      }
+                                    onChange={(e) => handleNestedFieldChange('images', 'desktop', {
+                                      ...formData.images.desktop,
+                                      focal_point: e.target.value
                                     })}
                                     placeholder="Focal point (e.g., center)"
                                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-white"
@@ -665,15 +653,9 @@ const handleSave = async () => {
                                   <input
                                     type="text"
                                     value={formData.images.mobile.alt}
-                                    onChange={(e) => setFormData({
-                                      ...formData,
-                                      images: {
-                                        ...formData.images,
-                                        mobile: {
-                                          ...formData.images.mobile,
-                                          alt: e.target.value
-                                        }
-                                      }
+                                    onChange={(e) => handleNestedFieldChange('images', 'mobile', {
+                                      ...formData.images.mobile,
+                                      alt: e.target.value
                                     })}
                                     placeholder="ALT text for mobile banner"
                                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-white font-mono"
@@ -683,15 +665,9 @@ const handleSave = async () => {
                                   <input
                                     type="text"
                                     value={formData.images.mobile.focal_point}
-                                    onChange={(e) => setFormData({
-                                      ...formData,
-                                      images: {
-                                        ...formData.images,
-                                        mobile: {
-                                          ...formData.images.mobile,
-                                          focal_point: e.target.value
-                                        }
-                                      }
+                                    onChange={(e) => handleNestedFieldChange('images', 'mobile', {
+                                      ...formData.images.mobile,
+                                      focal_point: e.target.value
                                     })}
                                     placeholder="Focal point (e.g., center)"
                                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-white"
@@ -717,10 +693,7 @@ const handleSave = async () => {
                               <input
                                 type="text"
                                 value={formData.meta.title}
-                                onChange={(e) => setFormData({
-                                  ...formData,
-                                  meta: { ...formData.meta, title: e.target.value }
-                                })}
+                                onChange={(e) => handleNestedFieldChange('meta', 'title', e.target.value)}
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-white"
                                 maxLength={60}
                               />
@@ -735,10 +708,7 @@ const handleSave = async () => {
                               </label>
                               <textarea
                                 value={formData.meta.description}
-                                onChange={(e) => setFormData({
-                                  ...formData,
-                                  meta: { ...formData.meta, description: e.target.value }
-                                })}
+                                onChange={(e) => handleNestedFieldChange('meta', 'description', e.target.value)}
                                 rows={3}
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-white"
                                 maxLength={160}
@@ -751,10 +721,7 @@ const handleSave = async () => {
                               <input
                                 type="text"
                                 value={formData.meta.focus_keyword}
-                                onChange={(e) => setFormData({
-                                  ...formData,
-                                  meta: { ...formData.meta, focus_keyword: e.target.value }
-                                })}
+                                onChange={(e) => handleNestedFieldChange('meta', 'focus_keyword', e.target.value)}
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-white"
                               />
                             </div>
@@ -768,10 +735,7 @@ const handleSave = async () => {
                               <input
                                 type="text"
                                 value={formData.meta.og_title}
-                                onChange={(e) => setFormData({
-                                  ...formData,
-                                  meta: { ...formData.meta, og_title: e.target.value }
-                                })}
+                                onChange={(e) => handleNestedFieldChange('meta', 'og_title', e.target.value)}
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-white"
                               />
                             </div>
@@ -779,10 +743,7 @@ const handleSave = async () => {
                               <label className="block text-sm font-medium text-gray-700">OG Description</label>
                               <textarea
                                 value={formData.meta.og_description}
-                                onChange={(e) => setFormData({
-                                  ...formData,
-                                  meta: { ...formData.meta, og_description: e.target.value }
-                                })}
+                                onChange={(e) => handleNestedFieldChange('meta', 'og_description', e.target.value)}
                                 rows={2}
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-white"
                               />
@@ -800,10 +761,7 @@ const handleSave = async () => {
                               value={formData.targeting.countries}
                               onChange={(e) => {
                                 const values = Array.from(e.target.selectedOptions, option => option.value);
-                                setFormData({
-                                  ...formData,
-                                  targeting: { ...formData.targeting, countries: values }
-                                });
+                                handleNestedFieldChange('targeting', 'countries', values);
                               }}
                               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-white"
                             >
@@ -829,10 +787,7 @@ const handleSave = async () => {
                                       const newSegments = e.target.checked
                                         ? [...formData.targeting.player_segments, segment]
                                         : formData.targeting.player_segments.filter(s => s !== segment);
-                                      setFormData({
-                                        ...formData,
-                                        targeting: { ...formData.targeting, player_segments: newSegments }
-                                      });
+                                      handleNestedFieldChange('targeting', 'player_segments', newSegments);
                                     }}
                                     className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 bg-gray-100 text-gray-800"
                                   />
@@ -851,10 +806,7 @@ const handleSave = async () => {
                               <input
                                 type="text"
                                 value={formData.tracking.campaign_id}
-                                onChange={(e) => setFormData({
-                                  ...formData,
-                                  tracking: { ...formData.tracking, campaign_id: e.target.value }
-                                })}
+                                onChange={(e) => handleNestedFieldChange('tracking', 'campaign_id', e.target.value)}
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-white"
                               />
                             </div>
@@ -863,10 +815,7 @@ const handleSave = async () => {
                               <input
                                 type="text"
                                 value={formData.tracking.utm_source}
-                                onChange={(e) => setFormData({
-                                  ...formData,
-                                  tracking: { ...formData.tracking, utm_source: e.target.value }
-                                })}
+                                onChange={(e) => handleNestedFieldChange('tracking', 'utm_source', e.target.value)}
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-white"
                               />
                             </div>
@@ -875,10 +824,7 @@ const handleSave = async () => {
                               <input
                                 type="text"
                                 value={formData.tracking.utm_medium}
-                                onChange={(e) => setFormData({
-                                  ...formData,
-                                  tracking: { ...formData.tracking, utm_medium: e.target.value }
-                                })}
+                                onChange={(e) => handleNestedFieldChange('tracking', 'utm_medium', e.target.value)}
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-white"
                               />
                             </div>
@@ -887,10 +833,7 @@ const handleSave = async () => {
                               <input
                                 type="text"
                                 value={formData.tracking.utm_campaign}
-                                onChange={(e) => setFormData({
-                                  ...formData,
-                                  tracking: { ...formData.tracking, utm_campaign: e.target.value }
-                                })}
+                                onChange={(e) => handleNestedFieldChange('tracking', 'utm_campaign', e.target.value)}
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-white"
                               />
                             </div>

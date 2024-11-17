@@ -172,7 +172,7 @@ const handleDeletePage = async (pageId) => {
                               {page.languages?.length > 0 && (
                                 <div className="flex items-center gap-1">
                                   <span className="text-xs text-gray-500 dark:text-gray-400 px-1">
-                                    Available in:
+                                    Post available in:
                                   </span>
                                   {page.languages.map((language) => (
                                     <span 
