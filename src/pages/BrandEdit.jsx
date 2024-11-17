@@ -1018,24 +1018,79 @@ return (
         <div>
           <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Content</h3>
           <div className="mt-4 space-y-4">
-            {/* Regular text fields */}
-            {Object.entries(localContent?.acf || {})
-              .filter(([key]) => key.endsWith('_info'))
-              .map(([key, value]) => (
-                <div key={key}>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                  </label>
-                  <div className="mt-1">
-                    <textarea
-                      rows={3}
-                      className="shadow-sm block w-full sm:text-sm border border-gray-300 dark:border-gray-900 rounded-md p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
-                      value={value || ''}
-                      onChange={(e) => handleContentChange(key, e.target.value)}
-                    />
-                  </div>
-                </div>
-              ))}
+
+            {/* Games Info Section */}
+<div className="bg-white shadow sm:rounded-lg mt-8 dark:bg-gray-900 dark:text-gray-100">
+  <div className="px-4 py-5 sm:p-6 space-y-6">
+    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Games Info</h3>
+    
+    <div className="space-y-6">
+      {[
+        {
+          key: 'new_games_info',
+          label: 'New Games Info',
+          description: 'Description for new games section'
+        },
+        {
+          key: 'popular_games_info',
+          label: 'Popular Games Info',
+          description: 'Description for popular games section'
+        },
+        {
+          key: 'slot_games_info',
+          label: 'Slot Games Info',
+          description: 'Description for slot games section'
+        },
+        {
+          key: 'casino_games_info',
+          label: 'Casino Games Info',
+          description: 'Description for casino games section'
+        },
+        {
+          key: 'jackpot_games_info',
+          label: 'Jackpot Games Info',
+          description: 'Description for jackpot games section'
+        },
+        {
+          key: 'live_games_info',
+          label: 'Live Games Info',
+          description: 'Description for live games section'
+        },
+        {
+          key: 'scratch_games_info',
+          label: 'Scratch Games Info',
+          description: 'Description for scratch games section'
+        }
+      ].map(({ key, label, description }) => (
+        <div key={key}>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            {label}
+            <span className="ml-1 text-sm text-gray-500 dark:text-gray-300">
+              ({description})
+            </span>
+          </label>
+          <textarea
+            rows={4}
+            value={localContent?.acf?.[key] || ''}
+            onChange={(e) => {
+              setLocalContent(prev => ({
+                ...prev,
+                acf: {
+                  ...prev.acf,
+                  [key]: e.target.value
+                }
+              }));
+              setIsDirty(true);
+            }}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 bg-gray-100 text-gray-800 dark:text-gray-100 dark:bg-gray-700"
+            placeholder={`Enter ${label.toLowerCase()}`}
+          />
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
+
 
             {/* Promo Over/Under Content */}
         <div>
