@@ -170,6 +170,7 @@ export function BrandEdit() {
   const [selectedImageType, setSelectedImageType] = useState(null);
   const [isLanguageChanging, setIsLanguageChanging] = useState(false);
   const [sharedPages, setSharedPages] = useState([]);
+  const [logoUpdateTrigger, setLogoUpdateTrigger] = useState(0);
 
   const showNotification = (message, type = 'info') => {
     setNotification({ message, type });
@@ -202,23 +203,34 @@ export function BrandEdit() {
 
     try {
       setIsLanguageChanging(true);
-      // Clear current content
-      setLocalContent(null);
       
-      // Navigate to new language
-      navigate(`/brands/${content.brand_info.whitelabel_id}/${newLang}`);
-      
-      // Wait for content to be fetched
+      // Get new content first
       const newContent = await getBrandContent(brandId, newLang);
       
-      // Set new content with a small delay to ensure clean state
+      // Log full content for debugging
+      console.log('Detailed Content:', {
+        lang: newLang,
+        oldLogo: localContent?.brand_info?.logo,
+        newLogo: newContent?.brand_info?.logo,
+        oldYoast: localContent?.yoast_head_json,
+        newYoast: newContent?.yoast_head_json,
+        oldAcf: localContent?.acf,
+        newAcf: newContent?.acf
+      });
+
+      // Navigate and update state
+      navigate(`/brands/${content.brand_info.whitelabel_id}/${newLang}`);
+      
+      // Force a clean state update
+      setLocalContent(null);
       setTimeout(() => {
         setLocalContent(newContent);
+        setIsDirty(false);
         setIsLanguageChanging(false);
-      }, 100);
+      }, 0);
 
-    } catch (err) {
-      console.error('Error switching language:', err);
+    } catch (error) {
+      console.error('Failed to switch language:', error);
       showNotification('Failed to switch language', 'error');
       setIsLanguageChanging(false);
     }
@@ -470,7 +482,7 @@ return (
     <div className="sm:flex sm:items-center sm:justify-between">
       <div>
         <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 pb-5">
-          {content.brand_info.brand_name} (ID: {content.brand_info.whitelabel_id})
+          {content.brand_info?.brand_name} (ID: {content.brand_info.whitelabel_id})
         </h1>
 
         {/* Language Pills */}
@@ -657,6 +669,7 @@ return (
                 </button>
               </div>
               <ImageUpload 
+                key={logoUpdateTrigger}
                 imageType="Brand Logo"
                 currentImageUrl={localContent.brand_info.logo}
                 onUpload={async (file) => {
@@ -1334,6 +1347,10 @@ return (
                 logo: url
               }
             }));
+            setLogoUpdateTrigger(prev => prev + 1);
+            if (url !== localContent.brand_info.logo) {
+              setIsDirty(true);
+            }
           } else if (selectedImageType === 'desktop') {
             setLocalContent(prev => ({
               ...prev,
@@ -1342,6 +1359,7 @@ return (
                 image_full: url
               }
             }));
+            setIsDirty(true);
           } else if (selectedImageType === 'mobile') {
             setLocalContent(prev => ({
               ...prev,
@@ -1350,9 +1368,9 @@ return (
                 image_small: url
               }
             }));
+            setIsDirty(true);
           }
           setIsLibraryOpen(false);
-          setIsDirty(true);
         }}
       />
     </div>

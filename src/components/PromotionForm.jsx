@@ -225,7 +225,7 @@ const handleSave = async () => {
       language: lang,
     };
 
-    const response = await fetch(`https://casino-promotions-api.tech1960.workers.dev/promotions`, {
+    const response = await fetch(`https://casino-promotions-api.tech1960.workers.dev/api/promotion`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

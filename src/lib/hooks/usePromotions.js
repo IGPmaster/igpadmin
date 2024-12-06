@@ -12,7 +12,12 @@ export function usePromotions(brandId, lang) {
   const listPromotions = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${WORKER_URL}/promotions?brandId=${brandId}&lang=${lang}`);
+      const response = await fetch(`${WORKER_URL}/api/promotions?brandId=${brandId}&lang=${lang}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -51,9 +56,12 @@ export function usePromotions(brandId, lang) {
         }
       };
 
-      const response = await fetch(`${WORKER_URL}/promotions`, {
+      const response = await fetch(`${WORKER_URL}/api/promotions`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify({ key, value: promotionContent })
       });
 
@@ -90,9 +98,12 @@ export function usePromotions(brandId, lang) {
         }
       };
 
-      const response = await fetch(`${WORKER_URL}/promotions`, {
+      const response = await fetch(`${WORKER_URL}/api/promotions/${promoId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify({ key, value: updatedContent })
       });
 
@@ -116,9 +127,12 @@ export function usePromotions(brandId, lang) {
       setLoading(true);
       const key = `promo:${brandId}:${lang}:${promoId}`;
 
-      const response = await fetch(`${WORKER_URL}/promotions`, {
+      const response = await fetch(`${WORKER_URL}/api/promotion/${promoId}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify({ key })
       });
 
@@ -145,6 +159,9 @@ export function usePromotions(brandId, lang) {
 
       const response = await fetch('https://casino-content-admin.tech1960.workers.dev/upload', {
         method: 'POST',
+        headers: {
+          'Accept': 'application/json'
+        },
         body: formData
       });
 

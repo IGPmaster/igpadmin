@@ -63,8 +63,28 @@ export function BrandList() {
         brand_info: {
           whitelabel_id: newBrandId,
           brand_name: newBrandName,
+          name: newBrandName,
+          logo: "",
         },
-        acf: { /* fields */ },
+        acf: {
+          language: newBrandLanguage,
+          geo_target_country_sel: [newBrandLanguage],
+          image_full: "",
+          image_small: "",
+          image_full_alt: "",
+          image_small_alt: "",
+          main_content: "",
+          new_games_info: "",
+          popular_games_info: "",
+          slot_games_info: "",
+          casino_games_info: "",
+          jackpot_games_info: "",
+          live_games_info: "",
+          scratch_games_info: ""
+        },
+        yoast_head_json: {
+          title: `${newBrandName} - Your Casino!!`
+        }
       };
 
       await saveBrandContent(newBrandId, newBrandLanguage, initialContent);
