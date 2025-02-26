@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "description": "SPA routing configuration",
+  "include": [
+    "/*"
+  ],
+  "exclude": [
+    "/assets/*", 
+    "/images/*", 
+    "/img/*",
+    "/js/*",
+    "/css/*",
+    "/_nuxt/*",
+    "/*.ico", 
+    "/*.svg", 
+    "/*.png", 
+    "/*.jpg", 
+    "/*.jpeg",
+    "/*.gif",
+    "/*.webp",
+    "/*.css", 
+    "/*.js",
+    "/*.json",
+    "/*.txt",
+    "/*.xml",
+    "/*.pdf"
+  ]
+} 
