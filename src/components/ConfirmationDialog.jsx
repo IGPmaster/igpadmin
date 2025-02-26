@@ -1,9 +1,10 @@
 // src/components/ConfirmationDialog.jsx
 import { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
+import PropTypes from 'prop-types';
 
 export function ConfirmationDialog({ 
-  isOpen, 
+  isOpen = false, 
   onClose, 
   onConfirm, 
   title, 
@@ -12,7 +13,7 @@ export function ConfirmationDialog({
   cancelText = 'Cancel'
 }) {
   return (
-    <Transition show={isOpen} as={Fragment}>
+    <Transition appear show={isOpen} as={Fragment}>
       <Dialog onClose={onClose} className="relative z-50">
         <Transition.Child
           as={Fragment}
@@ -73,3 +74,13 @@ export function ConfirmationDialog({
     </Transition>
   );
 }
+
+ConfirmationDialog.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onConfirm: PropTypes.func.isRequired,
+  title: PropTypes.string.isRequired,
+  message: PropTypes.string.isRequired,
+  confirmText: PropTypes.string,
+  cancelText: PropTypes.string
+};

@@ -4,10 +4,10 @@ import 'react-quill/dist/quill.snow.css';
 import { config } from '../lib/config';
 import ImageUpload from './ImageUpload';
 import { Tab } from '@headlessui/react';
-import { Globe, Target, BarChart, Image, FileText, Maximize2, Minimize2 } from 'lucide-react';
+import { Globe, FileText, Maximize2, Minimize2, Image } from 'lucide-react';
 import ImageLibraryModal from './ImageLibraryModal';
 import { UnsavedChangesDialog } from './UnsavedChangesDialog';
-import { LanguageSelector } from './LanguageSelector';
+import PropTypes from 'prop-types';
 
 const TEMPLATE_OPTIONS = [
   { value: 'default', label: 'Default Page' },
@@ -22,7 +22,7 @@ const STATUS_OPTIONS = [
   { value: 'archived', label: 'Archived' }
 ];
 
-export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
+export function PageForm({ isOpen, onClose, page = null, brandId, lang, onSave }) {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const toggleFullScreen = () => {
   setIsFullScreen(!isFullScreen);
@@ -222,7 +222,7 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
       // Save the page for each selected language
       await Promise.all(selectedLanguages.map(async (language) => {
         const key = `page:${brandId}:${language}:${pageId}`;
-
+        
         const pageData = {
           ...formData,
           id: pageId,
@@ -233,24 +233,35 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
           updated_at: new Date().toISOString(),
         };
 
-        const requestBody = {
-          brandId,
-          lang: language,
-          key,
-          value: pageData,
-        };
-
-        const response = await fetch(`https://casino-pages-api.tech1960.workers.dev/api/pages/`, {
+        // Modify the request structure to match what the API expects
+        const response = await fetch(`https://casino-pages-api.tech1960.workers.dev/api/pages`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(requestBody),
+          body: JSON.stringify({
+            brandId,
+            lang: language,
+            key,
+            value: pageData // Include the value property as required by the API
+          }),
         });
 
-        if (!response.ok) throw new Error(`Failed to save page for language: ${language}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`API Error (${response.status}):`, errorText);
+          throw new Error(`Failed to save page for language: ${language}`);
+        }
       }));
 
+      // Call onSave callback to trigger refresh in parent component
+      if (onSave) {
+        console.log('PageForm: Calling onSave callback to trigger refresh');
+        onSave();
+      } else {
+        console.warn('PageForm: onSave callback is not defined');
+      }
+      
       onClose();
     } catch (error) {
       console.error('Failed to save page:', error);
@@ -294,14 +305,6 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
     setFormData(prev => ({
       ...prev,
       [field]: value
-    }));
-    setIsDirty(true);
-  };
-
-  const handleQuillChange = (content) => {
-    setFormData(prev => ({
-      ...prev,
-      content: { ...prev.content, main: content }
     }));
     setIsDirty(true);
   };
@@ -1023,3 +1026,12 @@ export function PageForm({ isOpen, onClose, page = null, brandId, lang }) {
       </>
   );
 }
+
+PageForm.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  page: PropTypes.object,
+  brandId: PropTypes.string.isRequired,
+  lang: PropTypes.string.isRequired,
+  onSave: PropTypes.func
+};

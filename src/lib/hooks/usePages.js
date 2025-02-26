@@ -92,25 +92,34 @@ export function usePages(brandId, lang) {
   }, [brandId, lang, listPages]);
 
   // Delete page
-  const deletePage = async (pageId, brandId, lang) => {
+  const deletePage = async (pageId) => {
     try {
-      const response = await fetch(`${WORKER_URL}/api/pages/`, {
+      console.log(`Deleting page: ${pageId} for brand: ${brandId}, lang: ${lang}`);
+      
+      // Create the key in the same format as when saving
+      const key = `page:${brandId}:${lang}:${pageId}`;
+      
+      const response = await fetch(`${WORKER_URL}/api/pages`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          pageId,
+          key,
           brandId,
           lang,
+          pageId
         }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete page');
+        const errorData = await response.json().catch(() => ({}));
+        console.error(`Delete API Error (${response.status}):`, errorData);
+        throw new Error(errorData.error || `Failed to delete page (${response.status})`);
       }
 
+      console.log(`Successfully deleted page: ${pageId}`);
+      await listPages(); // Refresh the pages list after deletion
       return await response.json();
     } catch (error) {
       console.error('Failed to delete page:', error);

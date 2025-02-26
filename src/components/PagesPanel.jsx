@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import PropTypes from 'prop-types';
 import { usePages } from '../lib/hooks/usePages';
-import { Loader2, FileText, Layout } from 'lucide-react';
+import { Loader2, FileText, Layout, Share2 } from 'lucide-react';
 
-export const PagesPanel = ({ content, lang, setShowPageForm, setEditingPage, sharedPages, onToggleSharing, availableLanguages }) => {
-  const brandId = content?.brand_info?.whitelabel_id;
+export const PagesPanel = ({ brandId, lang, onEditPage, onAddPage, refreshTrigger, sharedPages, onPageSharing }) => {
+  // Note: sharedPages and onPageSharing are currently unused but kept for future implementation
   const {
     pages,                // From React Query
     loading: pagesLoading, // From React Query
@@ -12,41 +13,83 @@ export const PagesPanel = ({ content, lang, setShowPageForm, setEditingPage, sha
     refreshPages          // Our refresh function
   } = usePages(brandId, lang);
 
-   const [deleteInProgress, setDeleteInProgress] = useState(false);
+  const [deleteInProgress, setDeleteInProgress] = useState(false);
+  const [manualRefreshInProgress, setManualRefreshInProgress] = useState(false);
+  const previousRefreshTriggerRef = useRef(refreshTrigger);
+
+  useEffect(() => {
+    // Only refresh if the trigger value has changed
+    if (refreshTrigger !== previousRefreshTriggerRef.current) {
+      console.log(`PagesPanel: Refreshing pages. Previous trigger: ${previousRefreshTriggerRef.current}, Current trigger: ${refreshTrigger}`);
+      refreshPages();
+      previousRefreshTriggerRef.current = refreshTrigger;
+    } else {
+      console.log(`PagesPanel: Skipping refresh. Trigger value unchanged: ${refreshTrigger}`);
+    }
+  }, [refreshTrigger, refreshPages]);
+
+  // Log when component mounts or refreshTrigger changes
+  useEffect(() => {
+    console.log(`PagesPanel mounted/updated with refreshTrigger: ${refreshTrigger}`);
+    return () => {
+      console.log(`PagesPanel unmounting with refreshTrigger: ${refreshTrigger}`);
+    };
+  }, [refreshTrigger]);
+
+  // Manual refresh function with loading state
+  const handleManualRefresh = async () => {
+    try {
+      setManualRefreshInProgress(true);
+      await refreshPages();
+      console.log('PagesPanel: Manual refresh completed successfully');
+    } catch (error) {
+      console.error('PagesPanel: Manual refresh failed', error);
+    } finally {
+      setManualRefreshInProgress(false);
+    }
+  };
 
   // Function to handle editing a page
   const handleEditPage = (page) => {
-    const pageCopy = {
-      ...page,
-      content: page.content ? { ...page.content } : { main: '', excerpt: '' },
-      images: page.images || { featured: '', banner: '', thumbnail: '' },
-      seo_settings: page.seo_settings || { index: true, follow: true, schema_type: 'WebPage' },
-      categories: page.categories || [],
-      tags: page.tags || [],
-      status: page.status || 'draft',
-      template: page.template || 'default',
-    };
+    if (onEditPage) {
+      const pageCopy = {
+        ...page,
+        content: page.content ? { ...page.content } : { main: '', excerpt: '' },
+        images: page.images || { featured: '', banner: '', thumbnail: '' },
+        seo_settings: page.seo_settings || { index: true, follow: true, schema_type: 'WebPage' },
+        categories: page.categories || [],
+        tags: page.tags || [],
+        status: page.status || 'draft',
+        template: page.template || 'default',
+      };
 
-    setEditingPage(pageCopy);
-    setShowPageForm(true);
+      onEditPage(pageCopy);
+    }
   };
 
   // Function to handle deleting a page
-const handleDeletePage = async (pageId) => {
-    
+  const handleDeletePage = async (pageId) => {
     if (!window.confirm('Are you sure you want to delete this page?')) {
       return;
     }
 
     try {
       setDeleteInProgress(true);
-      await deletePage(pageId, brandId, lang);
-      await refreshPages(); // Refresh after delete
+      await deletePage(pageId);
+      // No need to manually refresh pages as the deletePage function now does this
     } catch (err) {
       console.error('Failed to delete page:', err);
       alert('Failed to delete page. Please try again.');
     } finally {
       setDeleteInProgress(false); // Make sure this runs
+    }
+  };
+
+  // Function to handle page sharing
+  const handlePageSharing = (pageId) => {
+    const isCurrentlyShared = sharedPages.includes(pageId);
+    if (onPageSharing) {
+      onPageSharing(pageId, !isCurrentlyShared);
     }
   };
 
@@ -83,13 +126,28 @@ const handleDeletePage = async (pageId) => {
               Manage content pages
             </p>
           </div>
-          <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+          <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none flex space-x-2">
+            <button
+              type="button"
+              className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600"
+              onClick={handleManualRefresh}
+              disabled={manualRefreshInProgress || pagesLoading}
+            >
+              {manualRefreshInProgress ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Refreshing...
+                </>
+              ) : (
+                'Refresh'
+              )}
+            </button>
             <button
               type="button"
               className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               onClick={() => {
-                setEditingPage(null); // Reset editing state
-                setShowPageForm(true);
+                if (onEditPage) onEditPage(null);
+                if (onAddPage) onAddPage(true);
               }}
             >
               Add Page
@@ -176,7 +234,7 @@ const handleDeletePage = async (pageId) => {
                                   </span>
                                   {page.languages.map((language) => (
                                     <span 
-                                      key={language} 
+                                      key={language}
                                       className="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-green-400 border border-green-400"
                                     >
                                       {language}
@@ -197,25 +255,37 @@ const handleDeletePage = async (pageId) => {
                                 ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100'
                                 : page.status === 'scheduled'
                                 ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-100'
-                                : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-100'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100'
                             } transition-colors duration-200`}>
-                              {page.status.charAt(0).toUpperCase() + page.status.slice(1)}
+                              {page.status ? page.status.charAt(0).toUpperCase() + page.status.slice(1) : 'Draft'}
                             </span>
                           </td>
                           <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
-                            {new Date(page.updated_at).toLocaleDateString()}
+                            {page.updated_at ? new Date(page.updated_at).toLocaleDateString() : 'N/A'}
                           </td>
                           <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                         <button
-        type="button"
-        onClick={() => {
-          handleDeletePage(page.id);
-        }}
-        disabled={deleteInProgress}
-        className="text-red-700 bg-red-50 border border-red-700 dark:text-red-400 dark:bg-red-900/50 dark:border-red-500 hover:bg-red-800 hover:text-white dark:hover:bg-red-800 dark:hover:text-white px-3 py-1 rounded-md transition-colors duration-200"
-      >
-        {deleteInProgress ? 'Deleting...' : 'Delete'}
-      </button>
+                            <div className="flex space-x-2 justify-end">
+                              <button
+                                type="button"
+                                onClick={() => handlePageSharing(page.id)}
+                                className={`flex items-center ${
+                                  sharedPages.includes(page.id)
+                                    ? 'text-green-700 bg-green-50 border border-green-700 dark:text-green-400 dark:bg-green-900/50 dark:border-green-500'
+                                    : 'text-blue-700 bg-blue-50 border border-blue-700 dark:text-blue-400 dark:bg-blue-900/50 dark:border-blue-500'
+                                } hover:bg-opacity-80 px-3 py-1 rounded-md transition-colors duration-200`}
+                              >
+                                <Share2 className="w-4 h-4 mr-1" />
+                                {sharedPages.includes(page.id) ? 'Shared' : 'Share'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeletePage(page.id)}
+                                disabled={deleteInProgress}
+                                className="text-red-700 bg-red-50 border border-red-700 dark:text-red-400 dark:bg-red-900/50 dark:border-red-500 hover:bg-red-800 hover:text-white dark:hover:bg-red-800 dark:hover:text-white px-3 py-1 rounded-md transition-colors duration-200"
+                              >
+                                {deleteInProgress ? 'Deleting...' : 'Delete'}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -229,4 +299,22 @@ const handleDeletePage = async (pageId) => {
       </div>
     </div>
   );
+};
+
+PagesPanel.propTypes = {
+  brandId: PropTypes.string,
+  lang: PropTypes.string.isRequired,
+  onEditPage: PropTypes.func,
+  onAddPage: PropTypes.func,
+  refreshTrigger: PropTypes.number,
+  sharedPages: PropTypes.array,
+  onPageSharing: PropTypes.func
+};
+
+PagesPanel.defaultProps = {
+  sharedPages: [],
+  onEditPage: () => {},
+  onAddPage: () => {},
+  onPageSharing: () => {},
+  refreshTrigger: 0
 };

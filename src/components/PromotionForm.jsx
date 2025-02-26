@@ -7,6 +7,7 @@ import { Tab } from '@headlessui/react';
 import { Globe, Target, BarChart, Image, FileText, Maximize2, Minimize2 } from 'lucide-react';
 import ImageLibraryModal from './ImageLibraryModal'; // Adjust the path if needed
 import { UnsavedChangesDialog } from './UnsavedChangesDialog';
+import PropTypes from 'prop-types';
 
 
 
@@ -68,6 +69,7 @@ export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [selectedImageType, setSelectedImageType] = useState(null); // to track if we are updating desktop or mobile
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
 
   // 3. All useEffect hooks together
@@ -100,6 +102,8 @@ export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang
         tracking: promotion.tracking || {},
       };
       setFormData(normalizedData);
+      // Reset isDirty when loading a promotion
+      setIsDirty(false);
     }
   }, [promotion]);
 
@@ -119,23 +123,37 @@ export function PromotionForm({ isOpen, onClose, promotion = null, brandId, lang
 
   // When any field changes, mark as dirty
   const handleFieldChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    setIsDirty(true);
+    setFormData(prev => {
+      // Only update if the value is actually different
+      if (prev[field] === value) {
+        return prev;
+      }
+      
+      setIsDirty(true);
+      return {
+        ...prev,
+        [field]: value
+      };
+    });
   };
 
   // For nested fields (like in content or meta sections)
 const handleNestedFieldChange = (section, field, value) => {
-  setFormData(prev => ({
-    ...prev,
-    [section]: {
-      ...prev[section],
-      [field]: value
+  setFormData(prev => {
+    // Only update if the value is actually different
+    if (prev[section][field] === value) {
+      return prev;
     }
-  }));
-  setIsDirty(true);  // Explicitly set isDirty
+    
+    setIsDirty(true);  // Explicitly set isDirty
+    return {
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [field]: value
+      }
+    };
+  });
 };
 
  // Handle image upload
@@ -180,21 +198,6 @@ const handleImageUpload = async (file, type) => {
   }
 };
 
-// For image alt text changes
-const handleImageAltChange = (type, alt) => {
-  setFormData(prev => ({
-    ...prev,
-    images: {
-      ...prev.images,
-      [type]: {
-        ...prev.images[type],
-        alt
-      }
-    }
-  }));
-  setIsDirty(true);  // Explicitly set isDirty
-};
-
   // Handle image delete
   const handleImageDelete = (type) => {
     setFormData(prev => ({
@@ -213,6 +216,8 @@ const handleImageAltChange = (type, alt) => {
 const handleSave = async () => {
   try {
     setSaving(true);
+    setSaveError(null); // Clear any previous errors
+    
     const promoId = promotion?.id || crypto.randomUUID();
     const key = `promo:${brandId}:${lang}:${promoId}`;
 
@@ -225,10 +230,22 @@ const handleSave = async () => {
       language: lang,
     };
 
-    const response = await fetch(`https://casino-promotions-api.tech1960.workers.dev/api/promotion`, {
-      method: 'PUT',
+    console.log('Saving promotion data:', promotionData);
+
+    // Use different endpoints for create vs update
+    const endpoint = promotion?.id 
+      ? `https://casino-promotions-api.tech1960.workers.dev/api/promotions/${promoId}`
+      : `https://casino-promotions-api.tech1960.workers.dev/api/promotions`;
+    
+    const method = promotion?.id ? 'PUT' : 'POST';
+    
+    console.log(`Making ${method} request to ${endpoint}`);
+    
+    const response = await fetch(endpoint, {
+      method: method,
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
       body: JSON.stringify({
         key,
@@ -236,15 +253,22 @@ const handleSave = async () => {
       }),
     });
 
-    if (!response.ok) throw new Error('Failed to save promotion');
-    
-    setIsDirty(false);  // Reset dirty state
-    if (onSave) {
-      await onSave();  // This will trigger the parent component refresh
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('API Error:', errorData);
+      throw new Error(errorData.error || 'Failed to save promotion');
     }
-    onClose();  // Close the form after successful save
+    
+    setIsDirty(false);
+    
+    // Call onSave callback if provided
+    if (onSave) {
+      console.log('Calling onSave callback with saved promotion data');
+      onSave(promotionData);
+    }
   } catch (error) {
     console.error('Failed to save promotion:', error);
+    setSaveError(error.message);
   } finally {
     setSaving(false);
   }
@@ -256,54 +280,79 @@ const handleSave = async () => {
     return null;
   }
 
-  // Add this function near your other handlers in the PromotionForm component
-  const handleDiscardChanges = () => {
-    // Reset form to initial state if creating new promotion
-    if (!promotion) {
-      setFormData(emptyFormData);
-    } else {
-      // Reset to original promotion data if editing
-      setFormData({
-        title: promotion.title || '',
-        slug: promotion.slug || '',
-        type: promotion.type || 'regular',
-        status: promotion.status || 'active',
-        images: {
-          desktop: {
-            url: promotion.images?.desktop?.url || '',
-            alt: promotion.images?.desktop?.alt || '',
-            width: promotion.images?.desktop?.width || null,
-            height: promotion.images?.desktop?.height || null,
-            focal_point: promotion.images?.desktop?.focal_point || 'center'
-          },
-          mobile: {
-            url: promotion.images?.mobile?.url || '',
-            alt: promotion.images?.mobile?.alt || '',
-            width: promotion.images?.mobile?.width || null,
-            height: promotion.images?.mobile?.height || null,
-            focal_point: promotion.images?.mobile?.focal_point || 'center'
-          }
-        },
-        content: promotion.content || {},
-        meta: promotion.meta || {},
-        targeting: promotion.targeting || {},
-        tracking: promotion.tracking || {},
-      });
-    }
-    setIsDirty(false);
-  };
-
   const handleClose = () => {
+    // Always check if there are unsaved changes
     if (isDirty) {
+      console.log("Form is dirty, showing unsaved dialog");
       setShowUnsavedDialog(true);
     } else {
+      console.log("Form is not dirty, closing directly");
       onClose();
     }
   };
 
-  const handleSaveAndClose = () => {
-    handleSave(new Event('submit'));
-    setShowUnsavedDialog(false);
+  const handleSaveAndClose = async () => {
+    try {
+      setSaving(true);
+      setSaveError(null); // Clear any previous errors
+      
+      const promoId = promotion?.id || crypto.randomUUID();
+      const key = `promo:${brandId}:${lang}:${promoId}`;
+
+      const promotionData = {
+        ...formData,
+        id: promoId,
+        created_at: promotion?.created_at || new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        brand_id: brandId,
+        language: lang,
+      };
+
+      console.log('Saving promotion data before closing:', promotionData);
+
+      // Use different endpoints for create vs update
+      const endpoint = promotion?.id 
+        ? `https://casino-promotions-api.tech1960.workers.dev/api/promotions/${promoId}`
+        : `https://casino-promotions-api.tech1960.workers.dev/api/promotions`;
+      
+      const method = promotion?.id ? 'PUT' : 'POST';
+      
+      console.log(`Making ${method} request to ${endpoint}`);
+      
+      const response = await fetch(endpoint, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          key,
+          value: promotionData,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('API Error:', errorData);
+        throw new Error(errorData.error || 'Failed to save promotion');
+      }
+      
+      setIsDirty(false);
+      
+      // Call onSave callback with the saved promotion data
+      if (onSave) {
+        console.log('Calling onSave callback with saved promotion data');
+        onSave(promotionData);
+      }
+      
+      // Close the form after successful save
+      onClose();
+    } catch (error) {
+      console.error('Failed to save promotion:', error);
+      setSaveError(error.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDiscardAndClose = () => {
@@ -347,10 +396,7 @@ const handleSave = async () => {
                   {promotion ? `Edit Promotion: ${promotion.title}` : 'New Promotion'}
                 </h3>
 
-                <form onSubmit={(e) => {
-                  e.preventDefault();  // Add this
-                  handleSave();
-                }}>
+                <form onSubmit={(e) => e.preventDefault()}>
                   <div className={`${isFullScreen ? 'h-[calc(100vh-180px)]' : 'min-h-[750px]'}`}>
                     <div className={`${isFullScreen ? 'h-full' : 'min-h-[700px]'}`}>
                       <Tab.Group>
@@ -497,10 +543,18 @@ const handleSave = async () => {
                                 <ReactQuill
                                   theme="snow"
                                   value={formData.content.description}
-                                  onChange={(content) => setFormData({
-                                    ...formData,
-                                    content: { ...formData.content, description: content }
-                                  })}
+                                  onChange={(content) => {
+                                    setFormData(prev => {
+                                      if (prev.content.description === content) {
+                                        return prev;
+                                      }
+                                      setIsDirty(true);
+                                      return {
+                                        ...prev,
+                                        content: { ...prev.content, description: content }
+                                      };
+                                    });
+                                  }}
                                   className="h-full"
                                   modules={{
                                     toolbar: [
@@ -532,10 +586,18 @@ const handleSave = async () => {
                               <ReactQuill
                                 theme="snow"
                                 value={formData.content.terms}
-                                onChange={(content) => setFormData({
-                                  ...formData,
-                                  content: { ...formData.content, terms: content }
-                                })}
+                                onChange={(content) => {
+                                  setFormData(prev => {
+                                    if (prev.content.terms === content) {
+                                      return prev;
+                                    }
+                                    setIsDirty(true);
+                                    return {
+                                      ...prev,
+                                      content: { ...prev.content, terms: content }
+                                    };
+                                  });
+                                }}
                                 className="h-12 mb-20"
                                 modules={{
                                   toolbar: [
@@ -845,21 +907,60 @@ const handleSave = async () => {
                 </div>
 
                 {/* Form Actions */}
-                <div className={`flex justify-end space-x-3 pt-4 border-t dark:border-gray-900
+                <div className={`flex flex-col justify-end space-y-3 pt-4 border-t dark:border-gray-900
                   ${isFullScreen ? 'fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 p-4' : 'mt-6'}`}>
-                  <button
-                    type="button"
-                    onClick={handleClose}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700"
-                  >
-                    {promotion ? 'Update Promotion' : 'Create Promotion'}
-                  </button>
+                   {saveError && (
+                    <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 rounded relative" role="alert">
+                      <strong className="font-bold">Error: </strong>
+                      <span className="block sm:inline">{saveError}</span>
+                     </div>
+                   )}
+                  <div className="flex justify-end space-x-3">
+                    <button
+                      type="button"
+                      onClick={handleClose}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600"
+                      disabled={saving}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSave}
+                      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={saving || !isDirty}
+                    >
+                      {saving ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Saving...
+                        </>
+                      ) : (
+                        promotion ? 'Update Promotion' : 'Create Promotion'
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveAndClose}
+                      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={saving}
+                    >
+                      {saving ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Saving...
+                        </>
+                      ) : (
+                        promotion ? 'Update & Close' : 'Create & Close'
+                      )}
+                    </button>
+                  </div>
                 </div>
               </form>
             </div>
@@ -893,3 +994,18 @@ const handleSave = async () => {
     </>
   );
 }
+
+// Add PropTypes validation
+PromotionForm.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  promotion: PropTypes.object,
+  brandId: PropTypes.string.isRequired,
+  lang: PropTypes.string.isRequired,
+  onSave: PropTypes.func
+};
+
+PromotionForm.defaultProps = {
+  promotion: null,
+  onSave: () => {}
+};

@@ -1,41 +1,76 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { config } from '../config';
 
 const WORKER_URL = 'https://casino-promotions-api.tech1960.workers.dev';
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // 1 second
 
 export function usePromotions(brandId, lang) {
   const [promotions, setPromotions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const refreshInProgress = useRef(false);
 
-  // List all promotions for a brand/language
-  const listPromotions = async () => {
+  // List all promotions for a brand/language with retry logic
+  const listPromotions = async (retryCount = 0) => {
+    // If a refresh is already in progress, don't start another one
+    if (refreshInProgress.current) {
+      console.log('Refresh already in progress, skipping');
+      return;
+    }
+
     try {
+      refreshInProgress.current = true;
       setLoading(true);
+      
+      console.log(`Attempting to fetch promotions (attempt ${retryCount + 1}/${MAX_RETRIES + 1})`);
+      
       const response = await fetch(`${WORKER_URL}/api/promotions?brandId=${brandId}&lang=${lang}`, {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
-        }
+        },
+        // Add cache busting parameter to avoid browser caching
+        cache: 'no-store'
       });
       
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || 'Failed to fetch promotions');
       }
 
       const data = await response.json();
+      console.log(`Successfully fetched ${data.length} promotions`);
       setPromotions(data);
+      setError(null); // Clear any previous errors
     } catch (err) {
+      console.error('Error fetching promotions:', err);
+      
+      // Implement retry logic
+      if (retryCount < MAX_RETRIES && err.message !== 'Failed to fetch promotions') {
+        console.log(`Retrying in ${RETRY_DELAY}ms...`);
+        setTimeout(() => {
+          refreshInProgress.current = false;
+          listPromotions(retryCount + 1);
+        }, RETRY_DELAY);
+        return;
+      }
+      
       setError(err.message);
     } finally {
       setLoading(false);
+      refreshInProgress.current = false;
     }
   };
 
   // Refresh function for promotions list
   const refreshPromotions = async () => {
-    await listPromotions();
+    // Only refresh if not already refreshing
+    if (!refreshInProgress.current) {
+      await listPromotions();
+    } else {
+      console.log('Refresh already in progress, skipping');
+    }
   };
 
   // Add new promotion
@@ -125,9 +160,16 @@ export function usePromotions(brandId, lang) {
   const deletePromotion = async (promoId) => {
     try {
       setLoading(true);
+      console.log(`Deleting promotion: ${promoId} for brand: ${brandId}, lang: ${lang}`);
+      
       const key = `promo:${brandId}:${lang}:${promoId}`;
 
-      const response = await fetch(`${WORKER_URL}/api/promotion/${promoId}`, {
+      // Optimistically update the UI by removing the promotion from the list
+      setPromotions(currentPromotions => 
+        currentPromotions.filter(promo => promo && promo.id !== promoId)
+      );
+
+      const response = await fetch(`${WORKER_URL}/api/promotions/${promoId}`, {
         method: 'DELETE',
         headers: { 
           'Content-Type': 'application/json',
@@ -137,12 +179,20 @@ export function usePromotions(brandId, lang) {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete promotion');
+        const errorData = await response.json().catch(() => ({}));
+        console.error(`Delete API Error (${response.status}):`, errorData);
+        
+        // If deletion fails, refresh the list to restore the correct state
+        await refreshPromotions();
+        
+        throw new Error(errorData.error || `Failed to delete promotion (${response.status})`);
       }
 
+      console.log(`Successfully deleted promotion ${promoId}`);
+      // We've already updated the UI optimistically, but refresh to ensure consistency
       await refreshPromotions();
     } catch (err) {
+      console.error('Error deleting promotion:', err);
       setError(err.message);
       throw err;
     } finally {
